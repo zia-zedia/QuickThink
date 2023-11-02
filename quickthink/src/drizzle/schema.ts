@@ -63,3 +63,4 @@ export type Test = typeof tests.$inferSelect;
 export type Question = typeof questions.$inferSelect;
 export type Answer = typeof answers.$inferSelect;
 export type Category = typeof categories.$inferSelect;
+export type UserInsert = typeof users.$inferInsert
