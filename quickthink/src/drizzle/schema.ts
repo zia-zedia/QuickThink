@@ -12,6 +12,7 @@ import {
   primaryKey,
   unique,
 } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
 
 export const organization = pgTable("organization", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
@@ -23,8 +24,8 @@ export const users = pgTable(
   "users",
   {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
-    firstName: text("first_name").notNull().default(""),
-    lastName: text("first_name").notNull().default(""),
+    firstName: text("first_name").notNull(),
+    lastName: text("last_name").notNull(),
     role: roleEnum("roles"),
     authId: uuid("auth_id"),
     organizationId: uuid("organization_id").references(() => organization.id),
@@ -85,3 +86,5 @@ export const results = pgTable("results", {
   studentId: uuid("student_id").references(() => users.id),
   grade: real("grade"),
 });
+
+export const UserInsert = createInsertSchema(users);

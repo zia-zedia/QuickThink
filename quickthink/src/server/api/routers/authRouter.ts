@@ -1,0 +1,62 @@
+import { z } from "zod";
+import { createTRPCRouter, publicProcedure } from "../trpc";
+import { TRPCError } from "@trpc/server";
+import { UserInsert, users } from "~/drizzle/schema";
+
+export const registrationSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(7).max(24),
+});
+
+export const authRouter = createTRPCRouter({
+  login: publicProcedure
+    .input(z.object({ email: z.string().email(), password: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: input.email,
+        password: input.password,
+      });
+      console.log(data);
+      if (data.user != null && data.session != null) {
+        return { user: data.user, session: data.session };
+      }
+      throw new TRPCError({ code: "NOT_FOUND" });
+    }),
+  signUp: publicProcedure
+    .input(
+      z.object({
+        authData: registrationSchema,
+        userData: UserInsert.pick({
+          firstName: true,
+          lastName: true,
+          role: true,
+        }),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      console.log(input);
+      const supabase = ctx.supabase;
+      const db = ctx.db;
+      const { data, error } = await supabase.auth.signUp({
+        email: input.authData.email,
+        password: input.authData.password,
+      });
+      console.log(data);
+      console.log(error);
+      if (data.user == null) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      const newUser = await db
+        .insert(users)
+        .values({
+          firstName: input.userData.firstName,
+          lastName: input.userData.lastName,
+          role: input.userData.role,
+          authId: data.user?.id,
+        })
+        .onConflictDoNothing()
+        .returning();
+      console.log(newUser);
+    }),
+});

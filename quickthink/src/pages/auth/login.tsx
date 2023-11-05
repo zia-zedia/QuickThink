@@ -62,6 +62,9 @@ export function LoginForm() {
         method="post"
         onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
           event.preventDefault();
+          if (!emailError.isValid) {
+            return;
+          }
           const formData = {
             email: (event.target as any).email.value,
             password: (event.target as any).password.value,
@@ -104,9 +107,8 @@ export function LoginForm() {
           />
         </div>
       </form>
-
       <p>
-        Don't have an account?{" "}
+        Don't have an account?
         <Link className="font-bold" href={"signup"}>
           Sign up
         </Link>
