@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useState } from "react";
-import { string, z } from "zod";
+import { z } from "zod";
 import { api } from "~/utils/api";
 
 export default function RegisterPage() {
@@ -45,8 +45,7 @@ export function RegisterForm() {
     const isValid = registerValid.safeParse(signUpData).success;
     if (!isValid) {
       console.log("nope");
-      setIsValid(false);
-      return;
+      
     }
     console.log("something");
     createUser.mutate({

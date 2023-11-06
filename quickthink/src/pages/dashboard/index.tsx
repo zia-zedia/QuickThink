@@ -1,16 +1,9 @@
-import {
-  ReactNode,
-  useState,
-} from "react";
+import { ReactNode, useState } from "react";
 import { api } from "~/utils/api";
 import { QuestionSection } from "../test/[id]";
 import { Head } from "next/document";
 
-type LayoutProps = {
-  children: ReactNode;
-};
-
-export function DashboardLayout(props: LayoutProps) {
+export function DashboardLayout(props: { children: ReactNode }) {
   return (
     <div className="h-screen">
       <div className="">{props.children}</div>
@@ -39,7 +32,7 @@ export function TestsContainer() {
         <div className="my-3 h-[1px] w-full bg-[#1A2643]"></div>
         <YourTests selectedTestId={selectedTestId} onClick={handleTestClick} />
       </div>
-      <div className="mx-[25%] p-2 w-[50%] border min-h-screen">
+      <div className="mx-[25%] min-h-screen w-[50%] border p-2">
         {selectedTestId ? <Test testId={selectedTestId} /> : <></>}
       </div>
     </div>
@@ -67,11 +60,12 @@ export function YourTests(props: {
           return (
             <div
               key={testData.id}
-              className={`rounded ${props.selectedTestId != null &&
+              className={`rounded ${
+                props.selectedTestId != null &&
                 props.selectedTestId === testData.id
-                ? "border border-[#1A2643]"
-                : ""
-                }`}
+                  ? "border border-[#1A2643]"
+                  : ""
+              }`}
             >
               <TestData
                 testData={{
@@ -126,7 +120,7 @@ export function Test(props: { testId: number }) {
 
   return (
     <>
-      <div className="h-full rounded shadow border p-3">
+      <div className="h-full rounded border p-3 shadow">
         <p className="font-bold">{fullTestData.data?.test?.title}</p>
         <div>
           {testQna.QnA.map((qna) => {

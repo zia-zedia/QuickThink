@@ -1,6 +1,6 @@
 import { exampleRouter } from "~/server/api/routers/example";
 import { createTRPCRouter } from "~/server/api/trpc";
-import { testRouter } from "./routers/tests";
+import { testRouter } from "./routers/testRouter";
 import { dashboardRouter } from "./routers/dashboard";
 import { authRouter } from "./routers/authRouter";
 

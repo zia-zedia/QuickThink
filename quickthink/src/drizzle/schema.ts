@@ -10,7 +10,7 @@ import {
   uuid,
   real,
   primaryKey,
-  unique,
+  interval,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 
@@ -28,12 +28,10 @@ export const users = pgTable(
     lastName: text("last_name").notNull(),
     role: roleEnum("roles"),
     authId: uuid("auth_id"),
-    organizationId: uuid("organization_id").references(() => organization.id),
   },
   (table) => {
     return {
       authIdx: index("auth_idx").on(table.authId),
-      organizationIdx: index("org_idx").on(table.organizationId),
     };
   },
 );
@@ -52,13 +50,21 @@ export const user_org = pgTable(
 );
 
 export const difficultyEnum = pgEnum("difficulty", ["EASY", "MED", "HARD"]);
+export const visibilityEnum = pgEnum("visibility", [
+  "public",
+  "private",
+  "organization",
+]);
 export const tests = pgTable("tests", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   title: text("title").notNull().default(""),
   description: text("description"),
-  publishedAt: timestamp("published_at"),
-  updatedAt: timestamp("updated_at"),
-  difficulty: difficultyEnum("difficulty"),
+  organizationId: uuid("organization_id").references(() => organization.id),
+  timeLength: interval("time_length", { fields: "second" }).default("300"),
+  publishedAt: timestamp("published_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  difficulty: difficultyEnum("difficulty").default("EASY"),
+  visibility: visibilityEnum("visibility").default("public"),
 });
 
 export const teacher_test = pgTable("teacher_test", {
@@ -76,7 +82,9 @@ export const questions = pgTable("questions", {
 export const answers = pgTable("answers", {
   id: serial("id").primaryKey().notNull(),
   content: text("content"),
-  questionId: integer("id").references(() => questions.id),
+  questionId: integer("question_id")
+    .references(() => questions.id)
+    .notNull(),
   isCorrect: boolean("is_correct"),
 });
 
