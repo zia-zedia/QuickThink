@@ -2,8 +2,6 @@ import Head from "next/head";
 import { api } from "~/utils/api";
 
 export default function Home() {
-  const hello = api.example.hello.useQuery({ text: "buddy" });
-  const protect = api.example.lockedProcedure.useQuery({ name: "something" });
   return (
     <>
       <Head>
@@ -14,9 +12,7 @@ export default function Home() {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <p className="">
-        {hello.data ? hello.data.greeting : "Loading tRPC query..."}
-      </p>
+      <p className="">hi</p>
     </>
   );
 }

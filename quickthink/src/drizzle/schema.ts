@@ -96,3 +96,4 @@ export const results = pgTable("results", {
 });
 
 export const UserInsert = createInsertSchema(users);
+export type TestType = typeof tests.$inferSelect;

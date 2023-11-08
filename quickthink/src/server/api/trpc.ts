@@ -4,6 +4,7 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 import { db } from "~/server/db";
 import { supabase, user, session } from "../auth/auth";
+import { testSessions } from "../timer/timer";
 
 type CreateContextOptions = Record<string, never>;
 const createInnerTRPCContext = (_opts: CreateContextOptions) => {
@@ -12,6 +13,7 @@ const createInnerTRPCContext = (_opts: CreateContextOptions) => {
     supabase,
     user,
     session,
+    testSessions,
   };
 };
 export const createTRPCContext = (_opts: CreateNextContextOptions) => {
@@ -34,25 +36,25 @@ export const createTRPCRouter = t.router;
 const middleware = t.middleware;
 
 const isAuthenticated = middleware(async (_opts) => {
-  const user = await supabase.auth.getUser()
-  console.log(user)
+  const user = await supabase.auth.getUser();
+  console.log(user);
   if (user.data.user === null) {
-    throw new TRPCError({ code: "UNAUTHORIZED" })
+    throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return _opts.next({
-    ctx: { user: user }
-  })
-})
+    ctx: { user: user },
+  });
+});
 
 const isTeacher = middleware(async (_opts) => {
-  const user = await supabase.auth.getUser()
-  console.log(user)
+  const user = await supabase.auth.getUser();
+  console.log(user);
   if (user.data.user === null) {
-    throw new TRPCError({ code: "UNAUTHORIZED" })
+    throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return _opts.next({
-    ctx: { user: user }
-  })
-})
+    ctx: { user: user },
+  });
+});
 export const publicProcedure = t.procedure;
-export const authenticatedProcedure = t.procedure.use(isAuthenticated) 
+export const authenticatedProcedure = t.procedure.use(isAuthenticated);
