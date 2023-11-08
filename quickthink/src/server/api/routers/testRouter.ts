@@ -34,7 +34,7 @@ export const testRouter = createTRPCRouter({
       console.log(testSession);
       testSession.set(
         { test_id: input.test_id, user_id: input.user_id },
-        Date.now(),
+        new Date(),
       );
       console.log(testSessions);
       return { something: "something" };

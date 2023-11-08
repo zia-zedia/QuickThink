@@ -95,5 +95,12 @@ export const results = pgTable("results", {
   grade: real("grade"),
 });
 
+export const testSessions = pgTable("test_sessions",{
+  id : uuid("session_id").primaryKey().defaultRandom(),
+  studentId : uuid("student_id").references(() => users.id).notNull(),
+  testId : uuid("test_id").references(() => tests.id).notNull(),
+  startTime : timestamp("start_time").defaultNow()
+})
+
 export const UserInsert = createInsertSchema(users);
 export type TestType = typeof tests.$inferSelect;
