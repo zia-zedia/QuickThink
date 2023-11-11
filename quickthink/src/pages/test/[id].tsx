@@ -1,8 +1,7 @@
-import { Head } from "next/document";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { TestType } from "~/drizzle/schema";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function TestPage() {
   const router = useRouter();
@@ -13,18 +12,34 @@ export default function TestPage() {
   if (!test_id) {
     return;
   }
+
   const testData = api.tests.getTestWithId.useQuery({ test_id: test_id });
-  const testSession = api.tests.startTestSession.useMutation({
-    onSuccess: () => {},
-    onError: () => {},
+  const sessionStarter = api.tests.startSession.useMutation({
+    onSuccess: (value) => {
+      const sessionId = value[0]?.sessionId;
+      if (sessionId === undefined) {
+        return;
+      }
+      localStorage.setItem("session_id", sessionId);
+      console.log(localStorage.getItem("session_id"));
+    },
+  });
+  const timer = api.tests.checkSession.useMutation({
+    onSuccess: (value) => {
+      console.log(value[0]?.startTime);
+    },
   });
 
-  function handleTimerStart() {
-    testSession.mutate({
-      user_id: "something",
-      test_id: "something",
-    });
-  }
+  useEffect(() => {
+    const sessionId = localStorage.getItem("session_id");
+    console.log(sessionId);
+    if (!sessionId) {
+      sessionStarter.mutate({ test_id: test_id });
+    }
+    timer.mutate({ sessionId: sessionId! });
+  }, []);
+
+  function handleTestStart() {}
 
   if (!testData.data?.testData) {
     return <>Loading...</>;
@@ -50,7 +65,7 @@ export default function TestPage() {
         <button
           className="rounded bg-white p-3 font-bold text-black"
           onClick={() => {
-            handleTimerStart();
+            handleTestStart();
           }}
         >
           Start Test

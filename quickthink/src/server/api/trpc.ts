@@ -5,6 +5,8 @@ import { ZodError } from "zod";
 import { db } from "~/server/db";
 import { supabase, user, session } from "../auth/auth";
 import { testSessions } from "../timer/timer";
+import { users } from "~/drizzle/schema";
+import { eq } from "drizzle-orm";
 
 type CreateContextOptions = Record<string, never>;
 const createInnerTRPCContext = (_opts: CreateContextOptions) => {
@@ -36,22 +38,38 @@ export const createTRPCRouter = t.router;
 const middleware = t.middleware;
 
 const isAuthenticated = middleware(async (_opts) => {
-  const user = await supabase.auth.getUser();
-  console.log(user);
-  if (user.data.user === null) {
+  const authUser = await supabase.auth.getUser();
+  console.log(authUser);
+  if (authUser.data.user === null) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
+  const user = await db
+    .select()
+    .from(users)
+    .where(eq(users.authId, authUser.data.user?.id));
+
   return _opts.next({
     ctx: { user: user },
   });
 });
 
 const isTeacher = middleware(async (_opts) => {
-  const user = await supabase.auth.getUser();
-  console.log(user);
-  if (user.data.user === null) {
+  const db = _opts.ctx.db;
+  const authUser = await supabase.auth.getUser();
+  console.log(authUser);
+  if (authUser.data.user === null) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
+
+  const user = await db
+    .select()
+    .from(users)
+    .where(eq(users.authId, authUser.data.user?.id));
+
+  if (user.length === 0) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
   return _opts.next({
     ctx: { user: user },
   });

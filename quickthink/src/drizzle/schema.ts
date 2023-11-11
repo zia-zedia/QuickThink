@@ -35,7 +35,7 @@ export const users = pgTable(
     };
   },
 );
-
+/*
 export const user_org = pgTable(
   "user_organization",
   {
@@ -48,6 +48,7 @@ export const user_org = pgTable(
     };
   },
 );
+*/
 
 export const difficultyEnum = pgEnum("difficulty", ["EASY", "MED", "HARD"]);
 export const visibilityEnum = pgEnum("visibility", [
@@ -95,5 +96,12 @@ export const results = pgTable("results", {
   grade: real("grade"),
 });
 
+export const sessions = pgTable("sessions", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  testId: uuid("test_id").references(() => tests.id),
+  startTime: timestamp("start_time").defaultNow(),
+});
+
 export const UserInsert = createInsertSchema(users);
 export type TestType = typeof tests.$inferSelect;
+export type SessionInsert = typeof sessions.$inferInsert;

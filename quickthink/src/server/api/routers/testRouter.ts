@@ -1,10 +1,14 @@
 import { TRPCError } from "@trpc/server";
 import { create } from "domain";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { Input } from "postcss";
 import { z } from "zod";
-import { tests } from "~/drizzle/schema";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { sessions, tests } from "~/drizzle/schema";
+import {
+  authenticatedProcedure,
+  createTRPCRouter,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { testSessions } from "~/server/timer/timer";
 
 export const testRouter = createTRPCRouter({
@@ -22,21 +26,32 @@ export const testRouter = createTRPCRouter({
       }
       throw new TRPCError({ code: "NOT_FOUND" });
     }),
-  startTestSession: publicProcedure
+  startSession: publicProcedure
+    .input(z.object({ test_id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = ctx.db;
+      const newSession = await db
+        .insert(sessions)
+        .values({ testId: input.test_id })
+        .returning({ sessionId: sessions.id });
+
+      return newSession;
+    }),
+  checkSession: publicProcedure
     .input(
       z.object({
-        test_id: z.string(),
-        user_id: z.string(),
+        sessionId: z.string().uuid(),
       }),
     )
-    .mutation(({ ctx, input }) => {
-      const testSession = ctx.testSessions;
-      console.log(testSession);
-      testSession.set(
-        { test_id: input.test_id, user_id: input.user_id },
-        Date.now(),
-      );
-      console.log(testSessions);
-      return { something: "something" };
+    .mutation(async ({ ctx, input }) => {
+      const db = ctx.db;
+      const session = await db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.id, input.sessionId));
+      if (session.length === 0) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      return session;
     }),
 });
