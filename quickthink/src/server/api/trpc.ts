@@ -47,11 +47,9 @@ const isAuthenticated = middleware(async (_opts) => {
 });
 
 const isTeacher = middleware(async (_opts) => {
-  const authId = _opts.ctx.user?.data?.user?.id?
-  const userRole = await _opts.ctx.db;
-    .select({ role: users.role })
-    .from(users)
-    .where(eq(users.authId, authId));
+  const authId = _opts.ctx.user?.data?.user?.id!
+  const db = _opts.ctx.db;
+  const userRole = await db.select({role : users.role}).from(users).where(eq(users.authId, authId));
 
   if (userRole.length === 0) {
     throw new TRPCError({ code: "NOT_FOUND" });

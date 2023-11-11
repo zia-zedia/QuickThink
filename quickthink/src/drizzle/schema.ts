@@ -35,7 +35,7 @@ export const users = pgTable(
     };
   },
 );
-
+/*
 export const user_org = pgTable(
   "user_organization",
   {
@@ -48,7 +48,7 @@ export const user_org = pgTable(
     };
   },
 );
-
+*/
 export const difficultyEnum = pgEnum("difficulty", ["EASY", "MED", "HARD"]);
 export const visibilityEnum = pgEnum("visibility", [
   "public",
@@ -95,12 +95,16 @@ export const results = pgTable("results", {
   grade: real("grade"),
 });
 
-export const testSessions = pgTable("test_sessions",{
-  id : uuid("session_id").primaryKey().defaultRandom(),
-  studentId : uuid("student_id").references(() => users.id).notNull(),
-  testId : uuid("test_id").references(() => tests.id).notNull(),
-  startTime : timestamp("start_time").defaultNow()
-})
+export const testSessions = pgTable("test_sessions", {
+  id: uuid("session_id").primaryKey().defaultRandom(),
+  studentId: uuid("student_id")
+    .references(() => users.id)
+    .notNull(),
+  testId: uuid("test_id")
+    .references(() => tests.id)
+    .notNull(),
+  startTime: timestamp("start_time").defaultNow(),
+});
 
 export const UserInsert = createInsertSchema(users);
 export type TestType = typeof tests.$inferSelect;
