@@ -49,6 +49,10 @@ export const user_org = pgTable(
   },
 );
 */
+<<<<<<< HEAD
+=======
+
+>>>>>>> beb9d76fa4c9698c6704eb643a05b4dedcde9acf
 export const difficultyEnum = pgEnum("difficulty", ["EASY", "MED", "HARD"]);
 export const visibilityEnum = pgEnum("visibility", [
   "public",
@@ -95,6 +99,7 @@ export const results = pgTable("results", {
   grade: real("grade"),
 });
 
+<<<<<<< HEAD
 export const testSessions = pgTable("test_sessions", {
   id: uuid("session_id").primaryKey().defaultRandom(),
   studentId: uuid("student_id")
@@ -105,6 +110,23 @@ export const testSessions = pgTable("test_sessions", {
     .notNull(),
   startTime: timestamp("start_time").defaultNow(),
 });
+=======
+<<<<<<< HEAD
+export const sessions = pgTable("sessions", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  testId: uuid("test_id").references(() => tests.id),
+  startTime: timestamp("start_time").defaultNow(),
+});
+=======
+export const testSessions = pgTable("test_sessions",{
+  id : uuid("session_id").primaryKey().defaultRandom(),
+  studentId : uuid("student_id").references(() => users.id).notNull(),
+  testId : uuid("test_id").references(() => tests.id).notNull(),
+  startTime : timestamp("start_time").defaultNow()
+})
+>>>>>>> adaf2b9a06dd5c070ac88caf87b9e6d1f990e742
+>>>>>>> beb9d76fa4c9698c6704eb643a05b4dedcde9acf
 
 export const UserInsert = createInsertSchema(users);
 export type TestType = typeof tests.$inferSelect;
+export type SessionInsert = typeof sessions.$inferInsert;
