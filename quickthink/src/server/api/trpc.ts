@@ -4,12 +4,8 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 import { db } from "~/server/db";
 import { supabase, user, session } from "../auth/auth";
-<<<<<<< HEAD
 import { testSessions } from "../timer/timer";
 import { users } from "~/drizzle/schema";
-=======
-import { testSessions, users } from "~/drizzle/schema";
->>>>>>> adaf2b9a06dd5c070ac88caf87b9e6d1f990e742
 import { eq } from "drizzle-orm";
 
 type CreateContextOptions = Record<string, never>;
@@ -58,11 +54,14 @@ const isAuthenticated = middleware(async (_opts) => {
 
 const isTeacher = middleware(async (_opts) => {
 <<<<<<< HEAD
+<<<<<<< HEAD
   const authId = _opts.ctx.user?.data?.user?.id!
   const db = _opts.ctx.db;
   const userRole = await db.select({role : users.role}).from(users).where(eq(users.authId, authId));
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> 1979f40cb044bc7a5d79fbf382808fa19b9fd288
   const db = _opts.ctx.db;
   const authUser = await supabase.auth.getUser();
   console.log(authUser);
@@ -79,6 +78,7 @@ const isTeacher = middleware(async (_opts) => {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 
+<<<<<<< HEAD
   return _opts.next({
     ctx: { user: user },
   });
@@ -97,9 +97,10 @@ const isTeacher = middleware(async (_opts) => {
   if (!(userRole[0]?.role === "teacher")) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
+=======
+>>>>>>> 1979f40cb044bc7a5d79fbf382808fa19b9fd288
   return _opts.next();
->>>>>>> adaf2b9a06dd5c070ac88caf87b9e6d1f990e742
 });
 export const publicProcedure = t.procedure;
 export const authenticatedProcedure = t.procedure.use(isAuthenticated);
-export const teacherProcedure = t.procedure.use(isAuthenticated).use(isTeacher)
+export const teacherProcedure = t.procedure.use(isTeacher);
