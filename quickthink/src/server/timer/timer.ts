@@ -2,7 +2,8 @@ export type timerType = {
   test_id: string;
   user_id: string;
 };
+/*
+export const testSession = "";
 
-export const testSessions = new Map<timerType, Date>();
-
-console.log(testSessions);
+export const sessionStore = new Map<string, Date>();
+console.log(sessionStore);
