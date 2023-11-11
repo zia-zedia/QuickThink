@@ -43,7 +43,6 @@ export const testRouter = createTRPCRouter({
         sessionId: z.string().uuid(),
       }),
     )
-<<<<<<< HEAD
     .mutation(async ({ ctx, input }) => {
       const db = ctx.db;
       const session = await db
@@ -54,16 +53,5 @@ export const testRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
       return session;
-=======
-    .mutation(({ ctx, input }) => {
-      const testSession = ctx.testSessions;
-      console.log(testSession);
-      testSession.set(
-        { test_id: input.test_id, user_id: input.user_id },
-        new Date(),
-      );
-      console.log(testSessions);
-      return { something: "something" };
->>>>>>> adaf2b9a06dd5c070ac88caf87b9e6d1f990e742
     }),
 });
