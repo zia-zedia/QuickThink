@@ -9,15 +9,32 @@ import {
   createTRPCRouter,
   publicProcedure,
 } from "~/server/api/trpc";
-import { testSessions } from "~/server/timer/timer";
 
 export const testRouter = createTRPCRouter({
   getTestWithId: publicProcedure
     .input(z.object({ test_id: z.string().uuid() }))
-    .query(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       const db = ctx.db;
       const test = await db
         .select()
+        .from(tests)
+        .where(eq(tests.id, input.test_id));
+
+      if (test.length > 0) {
+        return { testData: test[0] };
+      }
+      throw new TRPCError({ code: "NOT_FOUND" });
+    }),
+  getTestIntroWithId: publicProcedure
+    .input(z.object({ test_id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = ctx.db;
+      const test = await db
+        .select({
+          title: tests.title,
+          description: tests.description,
+          publishDate: tests.publishedAt,
+        })
         .from(tests)
         .where(eq(tests.id, input.test_id));
 
@@ -46,12 +63,26 @@ export const testRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const db = ctx.db;
       const session = await db
-        .select()
+        .select({
+          sessionId: sessions.id,
+          startTime: sessions.startTime,
+          testTimeLength: tests.timeLength,
+        })
         .from(sessions)
-        .where(eq(sessions.id, input.sessionId));
+        .where(eq(sessions.id, input.sessionId))
+        .leftJoin(tests, eq(sessions.testId, tests.id));
       if (session.length === 0) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
+      const maxTestTime =
+        session[0]?.startTime!.getTime()! + Number(session[0]?.testTimeLength);
+      if (Date.now() > maxTestTime) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Your session has run out.",
+        });
+      }
+
       return session;
     }),
 });

@@ -96,20 +96,11 @@ export const results = pgTable("results", {
   grade: real("grade"),
 });
 
-<<<<<<< HEAD
 export const sessions = pgTable("sessions", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   testId: uuid("test_id").references(() => tests.id),
   startTime: timestamp("start_time").defaultNow(),
 });
-=======
-export const testSessions = pgTable("test_sessions",{
-  id : uuid("session_id").primaryKey().defaultRandom(),
-  studentId : uuid("student_id").references(() => users.id).notNull(),
-  testId : uuid("test_id").references(() => tests.id).notNull(),
-  startTime : timestamp("start_time").defaultNow()
-})
->>>>>>> adaf2b9a06dd5c070ac88caf87b9e6d1f990e742
 
 export const UserInsert = createInsertSchema(users);
 export type TestType = typeof tests.$inferSelect;

@@ -13,7 +13,6 @@ export default function TestPage() {
     return;
   }
 
-  const testData = api.tests.getTestWithId.useQuery({ test_id: test_id });
   const sessionStarter = api.tests.startSession.useMutation({
     onSuccess: (value) => {
       const sessionId = value[0]?.sessionId;
@@ -28,6 +27,36 @@ export default function TestPage() {
     onSuccess: (value) => {
       console.log(value[0]?.startTime);
     },
+    onError: (value) => {
+      if (value.data?.code === "NOT_FOUND") {
+        sessionStarter.mutate({ test_id: test_id });
+      }
+    },
+  });
+  const testData = api.tests.getTestIntroWithId.useMutation({
+    onSuccess: (value) => {
+      console.log(value?.testData);
+    },
+    onError: (value) => {
+      if (value.data?.code === "BAD_REQUEST") {
+        return (
+          <>
+            <h1>An error happened</h1>,
+            <p>make sure you entered a valid test id.</p>
+            <p>{value.message}</p>
+          </>
+        );
+      }
+      if (value.data?.code === "NOT_FOUND") {
+        return (
+          <>
+            <h1>An error happened</h1>, We couldn't find a test with this id,
+            make sure you entered a valid test id
+            <p>{value.message}</p>
+          </>
+        );
+      }
+    },
   });
 
   useEffect(() => {
@@ -37,27 +66,25 @@ export default function TestPage() {
       sessionStarter.mutate({ test_id: test_id });
     }
     timer.mutate({ sessionId: sessionId! });
+    testData.mutate({ test_id: test_id });
   }, []);
 
-  function handleTestStart() {}
+  function handleTestStart() {
+    const sessionId = localStorage.getItem("session_id");
+    console.log(sessionId);
+    if (!test_id) {
+      return;
+    }
+    if (!sessionId) {
+      sessionStarter.mutate({ test_id: test_id });
+    }
+    timer.mutate({ sessionId: sessionId! });
+  }
 
   if (!testData.data?.testData) {
     return <>Loading...</>;
   }
 
-  if (testData.isError) {
-    if (testData.error.data?.code === "BAD_REQUEST") {
-      return <>An error happened, make sure you entered a valid test id.</>;
-    }
-    if (testData.error.data?.code === "NOT_FOUND") {
-      return (
-        <>
-          We couldn't find a test with this id, make sure you entered a valid
-          test id
-        </>
-      );
-    }
-  }
   return (
     <>
       <div className="flex h-screen flex-col items-center border border-black bg-[#EDF0FF]">
@@ -76,7 +103,7 @@ export default function TestPage() {
 }
 
 export function TestTopBar(props: {
-  testData: TestType;
+  testData: { title: string; description: string | null; date: Date | null };
   timeSession?: number;
 }) {
   return (
