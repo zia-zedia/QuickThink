@@ -77,21 +77,38 @@ export const testRouter = createTRPCRouter({
   startSession: publicProcedure
     .input(z.object({ test_id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      console.log("about to add something to the database :)");
       const db = ctx.db;
       const newSession = await db
         .insert(sessions)
         .values({ testId: input.test_id })
-        .returning({ sessionId: sessions.id });
+        .returning();
 
-      return newSession;
+      const test = await db
+        .select({ testTimeLength: tests.timeLength })
+        .from(tests)
+        .where(eq(tests.id, input.test_id));
+
+      const maxTestTime = new Date(
+        newSession[0]?.startTime!.getTime()! +
+          Number(test[0]?.testTimeLength!) * 1000,
+      );
+      const remainingTime = calculateRemainingTime(maxTestTime);
+      console.log(remainingTime);
+      return { session: newSession, timer: remainingTime };
     }),
-  checkSession: publicProcedure
+  handleSession: publicProcedure
     .input(
       z.object({
-        sessionId: z.string().uuid(),
+        sessionId: z.string().uuid().nullable(),
+        test_id: z.string().uuid(),
       }),
     )
     .query(async ({ ctx, input }) => {
+      if (!input.sessionId) {
+        console.log("hi");
+        return { session: null, timer: null };
+      }
       const db = ctx.db;
       const session = await db
         .select({
@@ -103,7 +120,10 @@ export const testRouter = createTRPCRouter({
         .where(eq(sessions.id, input.sessionId))
         .leftJoin(tests, eq(sessions.testId, tests.id));
       if (session.length === 0) {
-        throw new TRPCError({ code: "NOT_FOUND" });
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Your session has run out.",
+        });
       }
       const maxTestTime = new Date(
         session[0]?.startTime!.getTime()! +
