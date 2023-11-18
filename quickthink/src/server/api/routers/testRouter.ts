@@ -4,11 +4,12 @@ import { and, eq } from "drizzle-orm";
 import { Input } from "postcss";
 import { z } from "zod";
 import {
-  Question,
   answers,
   questions,
   sessions,
   tests,
+  Question,
+  Answer,
 } from "~/drizzle/schema";
 import {
   authenticatedProcedure,
@@ -21,15 +22,30 @@ export const testRouter = createTRPCRouter({
     .input(z.object({ test_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       const db = ctx.db;
-
-      const testQuestions = await db
-        .select()
+      const testQuery = await db
+        .select({ question: questions, answers: answers })
         .from(questions)
+        .leftJoin(answers, eq(answers.questionId, questions.id))
         .where(eq(questions.testId, input.test_id));
 
-      const getTestAnswers = async (questions: Question[]) => {
-        questions.forEach((question) => {});
-      };
+      const testQuestions = Object.values(
+        testQuery.reduce<
+          Record<number, { question: Question; answers: Answer[] }>
+        >((acc, row) => {
+          const question = row.question;
+          const answers = row.answers;
+
+          if (!acc[question.id]) {
+            acc[question.id] = { question, answers: [] };
+          }
+          if (answers) {
+            acc[question.id]?.answers.push(answers);
+          }
+          return acc;
+        }, {}),
+      );
+
+      return testQuestions;
     }),
   getTestQuestions: publicProcedure
     .input(z.object({ test_id: z.string().uuid() }))

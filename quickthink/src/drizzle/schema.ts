@@ -104,3 +104,5 @@ export const sessions = pgTable("sessions", {
 export const UserInsert = createInsertSchema(users);
 export type TestType = typeof tests.$inferSelect;
 export type SessionInsert = typeof sessions.$inferInsert;
+export type Question = typeof questions.$inferInsert;
+export type Answer = Omit<typeof answers.$inferInsert, "isCorrect">;

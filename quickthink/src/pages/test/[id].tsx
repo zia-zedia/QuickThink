@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
-import { Question, TestType } from "~/drizzle/schema";
+import { Answer, Question, TestType } from "~/drizzle/schema";
 import {
   ReactNode,
   useEffect,
@@ -31,8 +31,36 @@ export const TestContext = createContext<TextContextType>({
 export default function TestPageContainer() {
   return (
     <TestPageLayout>
-      <TestPage />
+      <TestingTestPage />
     </TestPageLayout>
+  );
+}
+
+export const testingQuestion: Question = {
+  id: 0,
+  answerAmount: 1,
+  content: "Questioning the question about questioning",
+  testId: "something",
+};
+
+export const testingAnswers: Answer[] = [
+  {
+    id: 0,
+    questionId: 0,
+    content:
+      "I love this shit I love this shit I love this shit I love this shit I love this shit I love this shit I love this shit I love this shit I love this shit",
+  },
+  { id: 1, questionId: 0, content: "I love this shit" },
+  { id: 2, questionId: 0, content: "I love this shit" },
+  { id: 3, questionId: 0, content: "I love this shit" },
+];
+
+export function TestingTestPage() {
+  return (
+    <div className="w-full max-w-2xl">
+      <QnA qna={{ question: testingQuestion, answers: testingAnswers }} />
+      <SubmitTest />
+    </div>
   );
 }
 
@@ -51,26 +79,12 @@ export function TestPage() {
   const [testStarted, setTestStarted] = useState(false);
   const startSession = api.tests.startSession.useMutation({
     onSuccess: (value) => {
-<<<<<<< HEAD
-      const sessionId = value.session?.id;
-      if (sessionId === undefined) {
-        return;
-      }
-      localStorage.setItem("session_id", sessionId);
-      console.log(localStorage.getItem("session_id"));
-    },
-  });
-  const timer = api.tests.checkSession.useMutation({
-    onSuccess: (value) => {
-      console.log(value.session?.startTime);
-=======
       setTestStarted(true);
       setTimeLeft(value.timer);
       localStorage.setItem("session_id", value.session[0]?.id!);
       console.log(sessionId);
       console.log(timeLeft);
       console.log("test started");
->>>>>>> 7a85d598867bc31a11f7bbc15d0d8b4aa586e6ae
     },
   });
   const { isLoading, isError, data, error, isSuccess } =
@@ -114,6 +128,7 @@ export function TestPage() {
     console.log(timeLeft);
     return;
   }
+
   return (
     <>
       <div
@@ -121,13 +136,17 @@ export function TestPage() {
           testStarted ? "" : "items-center "
         }`}
       >
-        <TestStartModal
-          test_id={test_id}
-          testStarted={testStarted}
-          startOnClick={HandleTestStart}
-          leaveOnClick={HandleLeaveTest}
-          timeLeft={timeLeft ? timeLeft : data.timer!}
-        />
+        <div className="w-full max-w-2xl">
+          <TestStartModal
+            test_id={test_id}
+            testStarted={testStarted}
+            startOnClick={HandleTestStart}
+            leaveOnClick={HandleLeaveTest}
+            timeLeft={timeLeft ? timeLeft : data.timer!}
+          />
+          {testStarted ? <Test testId={test_id} /> : null}
+          <SubmitTest />
+        </div>
       </div>
     </>
   );
@@ -160,7 +179,7 @@ export function TestStartModal(props: {
     return <Error message={error.message} code={error.data?.code} />;
   }
   return (
-    <div className="w-full max-w-2xl">
+    <>
       <div
         className={`flex flex-col gap-y-3 ${
           props.testStarted ? "" : "rounded-lg"
@@ -181,7 +200,7 @@ export function TestStartModal(props: {
         </div>
         {props.testStarted ? null : (
           <button
-            className="rounded border border-black px-2 py-1 text-[#1A2643] transition-colors hover:bg-[#1A2643] hover:text-white"
+            className="rounded px-2 py-1 text-[#1A2643] transition-colors hover:bg-[#1A2643] hover:text-white"
             onClick={() => {
               props.startOnClick();
             }}
@@ -198,7 +217,7 @@ export function TestStartModal(props: {
           />
         ) : null}
       </div>
-    </div>
+    </>
   );
 }
 
@@ -239,9 +258,10 @@ export function StartTestButton(props: { onClick: () => void }) {
 }
 
 export function Test(props: { testId: string }) {
-  const { isLoading, isError, data, error } = api.tests.getTestWithId.useQuery({
-    test_id: props.testId!,
-  });
+  const { isLoading, isError, data, error } =
+    api.tests.getTestDataWithId.useQuery({
+      test_id: props.testId!,
+    });
   if (isLoading) {
     return <Loading />;
   }
@@ -250,13 +270,140 @@ export function Test(props: { testId: string }) {
   }
   return (
     <div className="">
-      <Question question={data.testData!} />
+      {data.map((qna) => {
+        return <QnA qna={qna} />;
+      })}
     </div>
   );
 }
 
-export function Question(props: { question: Question }) {
-  return <div></div>;
+export function QuestionContainer(props: {
+  children: ReactNode;
+  question: Question;
+}) {
+  const [answered, setAnswered] = useState(false);
+  return (
+    <div className="flex flex-col gap-2 rounded bg-[#CADBFF] p-2 shadow">
+      <h1 className="px-3 py-2 font-bold">{props.question.content}</h1>
+      <div className="">{props.children}</div>
+    </div>
+  );
+}
+
+export function AnswerContainer(props: {
+  answers: Answer[];
+  numberOfAnswers: number;
+}) {
+  const [selectedAnswers, setSelectedAnswers] = useState<Answer[]>([]);
+  const numberOfAnswers = props.numberOfAnswers;
+
+  function handleAnswerSelection(answer: Answer) {
+    // Checks if the answer is already listed
+    const alreadyListed =
+      selectedAnswers.filter((selectedAnswer) => {
+        return selectedAnswer.id === answer.id;
+      }).length > 0;
+    console.log(alreadyListed);
+
+    if (alreadyListed) {
+      setSelectedAnswers(
+        selectedAnswers.filter((selectedAnswer) => {
+          return !(answer.id === selectedAnswer.id);
+        }),
+      );
+      return;
+    }
+
+    if (numberOfAnswers === 1) {
+      setSelectedAnswers([answer]);
+    }
+
+    if (selectedAnswers.length >= numberOfAnswers) {
+      return;
+    }
+    setSelectedAnswers(selectedAnswers.concat(answer));
+  }
+
+  useEffect(() => {
+    console.log(selectedAnswers);
+  }, [selectedAnswers]);
+
+  return (
+    <div className="mx-2 flex flex-wrap gap-x-1 gap-y-2">
+      {props.answers.map((answer, index) => {
+        const isSelected =
+          selectedAnswers.filter((selectedAnswer) => {
+            return answer.id === selectedAnswer.id;
+          }).length === 1;
+
+        return (
+          <>
+            <div className="w-full flex-grow flex-row">
+              <Answer
+                answer={answer}
+                index={index + 1}
+                isSelected={isSelected}
+                onSelect={(answer) => {
+                  handleAnswerSelection(answer);
+                }}
+              />
+            </div>
+          </>
+        );
+      })}
+    </div>
+  );
+}
+
+export function Answer(props: {
+  answer: Answer;
+  index?: number;
+  isSelected?: boolean;
+  onSelect: (answer: Answer) => void;
+}) {
+  const { answer, index, isSelected } = props;
+
+  const onSelect = props.onSelect;
+  return (
+    <>
+      <div
+        className={`${
+          isSelected ? "outline outline-2 outline-[#1A2643]" : ""
+        } flex flex-row items-center gap-x-3 rounded bg-white px-3 py-2 font-light transition-all hover:shadow`}
+        key={answer.id}
+        onClick={() => {
+          onSelect(answer);
+        }}
+      >
+        {index ? <div className="text-xl font-bold">{props.index}.</div> : null}
+        <div className="">{answer.content}</div>
+      </div>
+    </>
+  );
+}
+
+export function QnA(props: { qna: { question: Question; answers: Answer[] } }) {
+  const question = props.qna.question;
+  const answers = props.qna.answers;
+
+  return (
+    <div className="bg-white">
+      <QuestionContainer question={props.qna.question}>
+        <AnswerContainer
+          answers={answers}
+          numberOfAnswers={question.answerAmount!}
+        />
+      </QuestionContainer>
+    </div>
+  );
+}
+
+export function SubmitTest(enabled: boolean) {
+  return (
+    <button className="bg-white text-black" disabled={!enabled}>
+      Submit Result
+    </button>
+  );
 }
 
 export function Error(props: { code?: string; message: string }) {
