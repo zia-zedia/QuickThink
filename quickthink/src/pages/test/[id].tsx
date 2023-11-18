@@ -16,7 +16,7 @@ export default function TestPage() {
   const testData = api.tests.getTestWithId.useQuery({ test_id: test_id });
   const sessionStarter = api.tests.startSession.useMutation({
     onSuccess: (value) => {
-      const sessionId = value[0]?.sessionId;
+      const sessionId = value.session?.id;
       if (sessionId === undefined) {
         return;
       }
@@ -26,7 +26,7 @@ export default function TestPage() {
   });
   const timer = api.tests.checkSession.useMutation({
     onSuccess: (value) => {
-      console.log(value[0]?.startTime);
+      console.log(value.session?.startTime);
     },
   });
 

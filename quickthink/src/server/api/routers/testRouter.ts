@@ -9,7 +9,6 @@ import {
   createTRPCRouter,
   publicProcedure,
 } from "~/server/api/trpc";
-import { testSessions } from "~/server/timer/timer";
 
 export const testRouter = createTRPCRouter({
   getTestWithId: publicProcedure
@@ -33,9 +32,16 @@ export const testRouter = createTRPCRouter({
       const newSession = await db
         .insert(sessions)
         .values({ testId: input.test_id })
-        .returning({ sessionId: sessions.id });
+        .returning();
 
-      return newSession;
+      const time = await db
+        .select({ timeLength: tests.timeLength })
+        .from(tests)
+        .where(eq(tests.id, input.test_id));
+
+      console.log(newSession[0]?.startTime?.getTime());
+
+      return { session: newSession[0], time: time };
     }),
   checkSession: publicProcedure
     .input(
@@ -43,7 +49,6 @@ export const testRouter = createTRPCRouter({
         sessionId: z.string().uuid(),
       }),
     )
-<<<<<<< HEAD
     .mutation(async ({ ctx, input }) => {
       const db = ctx.db;
       const session = await db
@@ -53,17 +58,13 @@ export const testRouter = createTRPCRouter({
       if (session.length === 0) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
-      return session;
-=======
-    .mutation(({ ctx, input }) => {
-      const testSession = ctx.testSessions;
-      console.log(testSession);
-      testSession.set(
-        { test_id: input.test_id, user_id: input.user_id },
-        new Date(),
-      );
-      console.log(testSessions);
-      return { something: "something" };
->>>>>>> adaf2b9a06dd5c070ac88caf87b9e6d1f990e742
+      const time = await db
+        .select({ timeLength: tests.timeLength })
+        .from(tests)
+        .where(eq(tests.id, session[0]?.testId!));
+
+      console.log(time[0]?.timeLength);
+
+      return { session: session[0], time: time };
     }),
 });
