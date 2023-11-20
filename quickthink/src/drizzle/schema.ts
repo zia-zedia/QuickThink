@@ -35,7 +35,6 @@ export const users = pgTable(
     };
   },
 );
-
 export const difficultyEnum = pgEnum("difficulty", ["EASY", "MED", "HARD"]);
 export const visibilityEnum = pgEnum("visibility", [
   "public",
@@ -49,6 +48,7 @@ export const tests = pgTable("tests", {
   title: text("title").notNull().default(""),
   description: text("description"),
   organizationId: uuid("organization_id").references(() => organization.id),
+  timeLength: integer("time_length").default(300),
   timeLength: integer("time_length").default(300),
   publishedAt: timestamp("published_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -111,4 +111,5 @@ export const courses = pgTable("courses", {
 export const UserInsert = createInsertSchema(users);
 export type TestType = typeof tests.$inferSelect;
 export type SessionInsert = typeof sessions.$inferInsert;
-export type Question = typeof questions.$inferSelect;
+export type Question = typeof questions.$inferInsert;
+export type Answer = Omit<typeof answers.$inferInsert, "isCorrect">;

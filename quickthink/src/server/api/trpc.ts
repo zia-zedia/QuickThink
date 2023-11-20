@@ -4,12 +4,10 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 import { db } from "~/server/db";
 import { supabase, user, session } from "../auth/auth";
-import { testSessions } from "../timer/timer";
 import { users } from "~/drizzle/schema";
 import { eq } from "drizzle-orm";
 
-type CreateContextOptions = Record<string, never>;
-const createInnerTRPCContext = (_opts: CreateContextOptions) => {
+type CreateContextOptions = Record<string, never>; const createInnerTRPCContext = (_opts: CreateContextOptions) => {
   return {
     db,
     supabase,
