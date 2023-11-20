@@ -35,33 +35,21 @@ export const users = pgTable(
     };
   },
 );
-/*
-export const user_org = pgTable(
-  "user_organization",
-  {
-    userId: uuid("user_id").references(() => users.id),
-    organizationId: uuid("organization_id").references(() => organization.id),
-  },
-  (table) => {
-    return {
-      pk: primaryKey(table.userId, table.organizationId),
-    };
-  },
-);
-*/
 
 export const difficultyEnum = pgEnum("difficulty", ["EASY", "MED", "HARD"]);
 export const visibilityEnum = pgEnum("visibility", [
   "public",
   "private",
   "organization",
+  "not_published",
 ]);
+
 export const tests = pgTable("tests", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   title: text("title").notNull().default(""),
   description: text("description"),
   organizationId: uuid("organization_id").references(() => organization.id),
-  timeLength: interval("time_length", { fields: "second" }).default("300"),
+  timeLength: integer("time_length").default(300),
   publishedAt: timestamp("published_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   difficulty: difficultyEnum("difficulty").default("EASY"),
@@ -102,6 +90,25 @@ export const sessions = pgTable("sessions", {
   startTime: timestamp("start_time").defaultNow(),
 });
 
+export const user_org = pgTable(
+  "user_organization",
+  {
+    userId: uuid("user_id"),
+    organizationId: uuid("organization_id"),
+  },
+  (table) => {
+    return {
+      pk: primaryKey(table.userId, table.organizationId),
+    };
+  },
+);
+
+export const courses = pgTable("courses", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  name: text("course_name").notNull(),
+});
+
 export const UserInsert = createInsertSchema(users);
 export type TestType = typeof tests.$inferSelect;
 export type SessionInsert = typeof sessions.$inferInsert;
+export type Question = typeof questions.$inferSelect;
