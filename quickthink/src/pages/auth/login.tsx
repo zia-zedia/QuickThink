@@ -108,7 +108,7 @@ export function LoginForm() {
         </div>
       </form>
       <p>
-        Don't have an account?
+        Don't have an account?{" "}
         <Link className="font-bold" href={"signup"}>
           Sign up
         </Link>

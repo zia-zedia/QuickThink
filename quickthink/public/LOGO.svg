@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
+   sodipodi:docname="LOGO.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.70710678"
+     inkscape:cx="383.95898"
+     inkscape:cy="756.60426"
+     inkscape:window-width="1908"
+     inkscape:window-height="1008"
+     inkscape:window-x="1918"
+     inkscape:window-y="35"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       id="path1"
+       style="fill:#000000;stroke:#ffffff;stroke-width:0;stroke-linejoin:bevel;stroke-dasharray:none;stroke-opacity:1"
+       d="M 62.243746 159.42489 A 52.917137 52.917137 0 0 0 9.3265625 212.34208 A 52.917137 52.917137 0 0 0 62.243746 265.25926 A 52.917137 52.917137 0 0 0 82.578422 261.14788 L 72.435372 251.00587 L 82.586174 251.00587 L 75.582467 244.52409 A 34.52198 34.940865 0 0 1 62.243746 247.2831 A 34.52198 34.940865 0 0 1 27.721822 212.34208 A 34.52198 34.940865 0 0 1 62.243746 177.40157 A 34.52198 34.940865 0 0 1 96.76567 212.34208 A 34.52198 34.940865 0 0 1 88.9894 234.34539 L 99.811479 249.55996 A 52.917137 52.917137 0 0 0 115.16093 212.34208 A 52.917137 52.917137 0 0 0 62.243746 159.42489 z "
+       inkscape:export-filename="logo.png"
+       inkscape:export-xdpi="500"
+       inkscape:export-ydpi="500" />
+    <g
+       id="path3-4">
+      <path
+         style="color:#000000;fill:#000000;fill-opacity:0.997988;-inkscape-stroke:none"
+         d="M 51.40892,221.50495 H 79.2734 l 27.77816,39.053 H 91.61835 l 12.23652,21.19428 -30.27215,-30.27215 h 10.21379 z"
+         id="path10" />
+    </g>
+  </g>
+</svg>

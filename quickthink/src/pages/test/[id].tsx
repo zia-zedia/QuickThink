@@ -8,6 +8,7 @@ import {
   createContext,
   useContext,
 } from "react";
+import { set } from "zod";
 
 export function TestPageLayout(props: { children: ReactNode }) {
   return (
@@ -16,17 +17,6 @@ export function TestPageLayout(props: { children: ReactNode }) {
     </div>
   );
 }
-
-type TextContextType = {
-  testStarted: boolean;
-  setTestStarted: (isStarted: boolean) => void;
-};
-export const TestContext = createContext<TextContextType>({
-  testStarted: false,
-  setTestStarted: () => {
-    return;
-  },
-});
 
 export default function TestPageContainer() {
   return (
@@ -55,13 +45,13 @@ export const testingAnswers: Answer[] = [
   { id: 3, questionId: 0, content: "I love this shit" },
 ];
 
-export function TestingTestPage() {
-  return (
-    <div className="w-full max-w-2xl">
-      <QnA qna={{ question: testingQuestion, answers: testingAnswers }} />
-    </div>
-  );
-}
+// export function TestingTestPage() {
+//   return (
+//     <div className="w-full max-w-2xl">
+//       <QnA qna={{ question: testingQuestion, answers: testingAnswers }} />
+//     </div>
+//   );
+// }
 
 export function TestPage() {
   const router = useRouter();
@@ -74,8 +64,6 @@ export function TestPage() {
   }
 
   const [timeLeft, setTimeLeft] = useState<TimeType | null>(null);
-  const [result, setResult] =
-    useState<Array<{ question: Question; answers: Answer[] } | null>>();
   const sessionId = localStorage.getItem("session_id");
   const [testStarted, setTestStarted] = useState(false);
   const startSession = api.tests.startSession.useMutation({
@@ -137,7 +125,7 @@ export function TestPage() {
           testStarted ? "" : "items-center "
         }`}
       >
-        <div className="w-full max-w-2xl">
+        <div className="w-full max-w-3xl">
           <TestStartModal
             test_id={test_id}
             testStarted={testStarted}
@@ -182,7 +170,7 @@ export function TestStartModal(props: {
     <>
       <div
         className={`flex flex-col gap-y-3 ${
-          props.testStarted ? "" : "rounded-lg"
+          props.testStarted ? "" : "rounded-t-lg"
         } bg-[#FBFBFF] p-4 shadow-lg`}
       >
         <div className="flex flex-row items-center justify-between gap-2 ">
@@ -258,21 +246,81 @@ export function StartTestButton(props: { onClick: () => void }) {
 }
 
 export function Test(props: { testId: string }) {
+  const [testAnswers, setTestAnswers] = useState<
+    Array<{
+      question: Question;
+      answers: Answer[];
+    }>
+  >([]);
   const { isLoading, isError, data, error } =
     api.tests.getTestDataWithId.useQuery({
       test_id: props.testId!,
     });
+
+  useEffect(() => {
+    testAnswers.map((qna) => console.log(qna.question.content));
+    testAnswers.map((qna) => console.log(qna.answers));
+  }, [testAnswers]);
+
   if (isLoading) {
     return <Loading />;
   }
   if (isError) {
     return <Error message={error.message} code={error.data?.code} />;
   }
+
+  function handleTestAnswers(QnA: { question: Question; answers: Answer[] }) {
+    const isListed =
+      testAnswers.filter((qna) => {
+        return qna.question.id === QnA.question.id;
+      }).length > 0;
+
+    if (!isListed) {
+      setTestAnswers(testAnswers.concat(QnA));
+      return;
+    }
+    const newArray = testAnswers.map((testAnswer) => {
+      if (testAnswer.question.id === QnA.question.id) {
+        return {
+          ...testAnswer,
+          answers: QnA.answers,
+        };
+      }
+      return testAnswer;
+    });
+    setTestAnswers(newArray);
+  }
+
   return (
     <div className="">
       {data.map((qna) => {
-        return <QnA qna={qna} />;
+        return <QnA qna={qna} handleAnswers={handleTestAnswers} />;
       })}
+    </div>
+  );
+}
+
+export function QnA(props: {
+  qna: { question: Question; answers: Answer[] };
+  handleAnswers: (QnA: { question: Question; answers: Answer[] }) => void;
+}) {
+  const question = props.qna.question;
+  const answers = props.qna.answers;
+  const handleAnswers = props.handleAnswers;
+
+  function QnAHandler(answers: Answer[]) {
+    handleAnswers({ question: question, answers: answers });
+  }
+
+  return (
+    <div className="bg-white">
+      <QuestionContainer question={question}>
+        <AnswerContainer
+          answers={answers}
+          numberOfAnswers={question.answerAmount!}
+          onAnswer={QnAHandler}
+        />
+      </QuestionContainer>
     </div>
   );
 }
@@ -281,7 +329,6 @@ export function QuestionContainer(props: {
   children: ReactNode;
   question: Question;
 }) {
-  const [answered, setAnswered] = useState(false);
   return (
     <div className="flex flex-col gap-2 rounded bg-[#CADBFF] p-2 shadow">
       <h1 className="px-3 py-2 font-bold">{props.question.content}</h1>
@@ -293,12 +340,12 @@ export function QuestionContainer(props: {
 export function AnswerContainer(props: {
   answers: Answer[];
   numberOfAnswers: number;
+  onAnswer: (answers: Answer[]) => void;
 }) {
   const [selectedAnswers, setSelectedAnswers] = useState<Answer[]>([]);
   const numberOfAnswers = props.numberOfAnswers;
 
   function handleAnswerSelection(answer: Answer) {
-    // Checks if the answer is already listed
     const alreadyListed =
       selectedAnswers.filter((selectedAnswer) => {
         return selectedAnswer.id === answer.id;
@@ -325,7 +372,7 @@ export function AnswerContainer(props: {
   }
 
   useEffect(() => {
-    console.log(selectedAnswers);
+    props.onAnswer(selectedAnswers);
   }, [selectedAnswers]);
 
   return (
@@ -362,7 +409,6 @@ export function Answer(props: {
   onSelect: (answer: Answer) => void;
 }) {
   const { answer, index, isSelected } = props;
-
   const onSelect = props.onSelect;
   return (
     <>
@@ -379,22 +425,6 @@ export function Answer(props: {
         <div className="">{answer.content}</div>
       </div>
     </>
-  );
-}
-
-export function QnA(props: { qna: { question: Question; answers: Answer[] } }) {
-  const question = props.qna.question;
-  const answers = props.qna.answers;
-
-  return (
-    <div className="bg-white">
-      <QuestionContainer question={props.qna.question}>
-        <AnswerContainer
-          answers={answers}
-          numberOfAnswers={question.answerAmount!}
-        />
-      </QuestionContainer>
-    </div>
   );
 }
 

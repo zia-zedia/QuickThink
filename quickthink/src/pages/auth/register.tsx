@@ -11,10 +11,7 @@ export default function RegisterPage() {
         <title>Sign Up</title>
         <meta name="description" content="Sign up to QuickThink" />
       </Head>
-      <div className="flex h-screen flex-col items-center justify-center p-5">
-        <div className="flex flex-col py-4 text-center">
-          <h1 className="text-2xl font-bold">Welcome to QuickThink!</h1>
-        </div>
+      <div className="flex h-screen flex-col items-center justify-center bg-[#CADBFF] p-5">
         <RegisterForm />
       </div>
     </>
@@ -45,7 +42,6 @@ export function RegisterForm() {
     const isValid = registerValid.safeParse(signUpData).success;
     if (!isValid) {
       console.log("nope");
-      
     }
     console.log("something");
     createUser.mutate({
@@ -59,7 +55,7 @@ export function RegisterForm() {
   }
   return (
     <div className="max-w-xl flex-col rounded bg-[#1A2643] p-5 text-white shadow-lg sm:w-[50%]">
-      <h1 className="text-3xl font-bold">Sign up</h1>
+      <h1 className="text-3xl font-bold">Sign up to QuickThink</h1>
       {isValid ? (
         ""
       ) : (
@@ -140,7 +136,7 @@ export function RegisterForm() {
       </form>
       <p>
         Already have an account?{" "}
-        <Link className="font-bold" href={"/login"}>
+        <Link className="font-bold" href={"/auth/login"}>
           Sign in
         </Link>
       </p>

@@ -49,7 +49,6 @@ export const tests = pgTable("tests", {
   description: text("description"),
   organizationId: uuid("organization_id").references(() => organization.id),
   timeLength: integer("time_length").default(300),
-  timeLength: integer("time_length").default(300),
   publishedAt: timestamp("published_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   difficulty: difficultyEnum("difficulty").default("EASY"),
