@@ -1,47 +1,63 @@
-import { Head } from "next/document";
+import Link from "next/link";
 import { ReactNode } from "react";
+import { TestType as Test } from "~/drizzle/schema";
+import { api } from "~/utils/api";
 
-export function DashboardLayout(props: { children: ReactNode }) {
-  return (
-    <div className="h-screen">
-      <div className="">{props.children}</div>
-    </div>
-  );
-}
 export default function StudentLayout() {
-  return (
-    <DashboardLayout>
-      <StudentIndex>
-        <StudentDashboard />
-      </StudentIndex>
-    </DashboardLayout>
-  );
+  return <StudentIndex />;
 }
 
-export function StudentIndex(props: { children: ReactNode }) {
+export function StudentIndex() {
   return (
     <>
-      <Head>
-        <title>Multiple Choice Test</title>
-        <meta
-          name="description"
-          content="A test taking and creating platform"
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      {props.children}
+      <AllTests />
     </>
   );
 }
 
 export function StudentDashboard() {
   return (
+    <div>
+      <AllTests />
+    </div>
+  );
+}
+
+export function AllTests() {
+  const { isLoading, isError, data, error } =
+    api.student.getTestList.useQuery();
+  if (isLoading) {
+    return <>Loading...</>;
+  }
+  if (isError) {
+    return <>An error occurred</>;
+  }
+
+  return (
     <>
-      <ResultsSection />
+      <div className="p-3">
+        <div className="text-2xl font-bold">Test List</div>
+        <div className="flex justify-center gap-3">
+          {data.map((test) => {
+            return <TestComponent test={test} />;
+          })}
+        </div>
+      </div>
     </>
   );
 }
 
-export function ResultsSection() {
-  return <>Results</>;
+export function TestComponent(props: { test: Test }) {
+  const test = props.test;
+  return (
+    <div className="flex w-full max-w-lg flex-col rounded bg-[#CADBFF] p-3 shadow">
+      <h1 className="font-bold">{test.title}</h1>
+      <div>
+        <p className="font-light">{test.description}</p>
+      </div>
+      <button className="rounded bg-white text-black">
+        <Link href={`/test/${test.id}`}>Start test</Link>
+      </button>
+    </div>
+  );
 }

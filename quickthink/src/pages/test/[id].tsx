@@ -252,14 +252,19 @@ export function Test(props: { testId: string }) {
       answers: Answer[];
     }>
   >([]);
+  const [completed, setCompleted] = useState(false);
   const { isLoading, isError, data, error } =
     api.tests.getTestDataWithId.useQuery({
       test_id: props.testId!,
     });
 
   useEffect(() => {
-    testAnswers.map((qna) => console.log(qna.question.content));
-    testAnswers.map((qna) => console.log(qna.answers));
+    if (testAnswers.length === 3) {
+      console.log("hi");
+      setCompleted(true);
+      return;
+    }
+    setCompleted(false);
   }, [testAnswers]);
 
   if (isLoading) {
@@ -291,11 +296,22 @@ export function Test(props: { testId: string }) {
     setTestAnswers(newArray);
   }
 
+  function HandleSubmit() {
+    if (testingAnswers.length < data!.length) {
+      return;
+    }
+  }
+
   return (
-    <div className="">
+    <div>
       {data.map((qna) => {
-        return <QnA qna={qna} handleAnswers={handleTestAnswers} />;
+        return (
+          <div className="p-2">
+            <QnA qna={qna} handleAnswers={handleTestAnswers} />
+          </div>
+        );
       })}
+      <SubmitTest onSubmit={HandleSubmit} enabled={completed} />
     </div>
   );
 }
@@ -428,9 +444,17 @@ export function Answer(props: {
   );
 }
 
-export function SubmitTest(enabled?: boolean) {
+export function SubmitTest(props: { enabled?: boolean; onSubmit: () => void }) {
+  const enabled = props.enabled;
+  const onSubmit = props.onSubmit;
   return (
-    <button className="bg-white text-black" disabled={!enabled}>
+    <button
+      className={`rounded bg-white px-3 py-2 text-black hover:cursor-pointer ${
+        enabled ? "" : "text-gray-500"
+      }`}
+      disabled={!enabled}
+      onClick={onSubmit}
+    >
       Submit Result
     </button>
   );

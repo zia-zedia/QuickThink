@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import Head from "next/head";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -11,6 +10,7 @@ export default function LoginPage() {
       <Head>
         <title>Login</title>
         <meta name="description" content="Log into QuickThink" />
+        <link rel="icon" href="/white_logo.png" />
       </Head>
       <div className="flex h-screen flex-col items-center justify-center p-5">
         <div className="flex flex-col py-4 text-center">
@@ -31,6 +31,7 @@ export function LoginForm() {
     message: string;
   }>({ isValid: true, message: "" });
   const [message, setMessage] = useState("");
+  const { isLoading, isError, data, error } = api.auth.isLoggedIn.useQuery();
 
   useEffect(() => {
     const emailValid = z.string().email().safeParse(email);
@@ -43,20 +44,32 @@ export function LoginForm() {
       return;
     }
     setEmailError({ isValid: true, message: "" });
-  }, [email, password]);
+  }, [email]);
 
   const loginUser = api.example.loginUser.useMutation({
-    onSuccess: (data) => {},
+    onSuccess: (data) => {
+      window.location.href = "/student";
+    },
     onError: (error) => {
       setMessage(`Login Failed, ${error.message}`);
     },
   });
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (data === true) {
+    console.log(data);
+    window.location.href = "/student";
+  }
+
   function handleLogin(loginData: { email: string; password: string }) {
     loginUser.mutate(loginData);
   }
   return (
     <div className="max-w-xl flex-col rounded bg-[#1A2643] p-5 text-white sm:w-[50%]">
-      <h1 className="text-3xl font-bold">Login</h1>
+      <h1 className="text-3xl font-bold">Login to QuickThink</h1>
       <form
         className="flex flex-col gap-2 py-4"
         method="post"
@@ -109,7 +122,7 @@ export function LoginForm() {
       </form>
       <p>
         Don't have an account?{" "}
-        <Link className="font-bold" href={"signup"}>
+        <Link className="font-bold" href={"register"}>
           Sign up
         </Link>
       </p>

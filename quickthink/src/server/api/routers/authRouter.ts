@@ -59,4 +59,14 @@ export const authRouter = createTRPCRouter({
         .returning();
       console.log(newUser);
     }),
+  isLoggedIn: publicProcedure.query(async ({ ctx }) => {
+    const supabase = ctx.supabase;
+    const user = await supabase.auth.getUser();
+    if (user.data.user != null) {
+      console.log(user.data.user);
+      return true;
+    }
+    console.log(user.data.user);
+    return false;
+  }),
 });

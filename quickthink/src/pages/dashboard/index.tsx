@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import { api } from "~/utils/api";
-import { QuestionSection } from "../test/[id]";
+import { QuestionSection } from "../test/old id";
 import { Head } from "next/document";
 
 export function DashboardLayout(props: { children: ReactNode }) {

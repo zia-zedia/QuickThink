@@ -21,12 +21,17 @@ export default function RegisterPage() {
 export function RegisterForm() {
   const [isValid, setIsValid] = useState(true);
   const [error, setError] = useState("");
-
   const createUser = api.auth.signUp.useMutation({
     onSuccess: () => {
       setIsValid(true);
     },
   });
+  function checkEmailAvailability(email: string) {
+    const emailValidator = z.string().email();
+    if (!emailValidator.safeParse(email)) {
+      return;
+    }
+  }
   function handleSignUp(signUpData: any) {
     const registerValid = z.object({
       authData: z.object({
@@ -59,7 +64,9 @@ export function RegisterForm() {
       {isValid ? (
         ""
       ) : (
-        <p className="text-red-400">Please fill in all the form elements</p>
+        <p className="text-red-400">
+          Please fill in all the form elements properly
+        </p>
       )}
       <form
         className="flex flex-col gap-2 py-4"
@@ -116,6 +123,7 @@ export function RegisterForm() {
               type="email"
               placeholder="Enter email"
               name="email"
+              onBlur={checkEmail}
             />
           </div>
           <div className="flex flex-col gap-1 font-light">

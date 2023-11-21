@@ -14,18 +14,23 @@ export default function Home() {
       </Head>
       <Hero>
         <HeroText>
-          <div className="self-center">
+          <div>
             <p className="font-light xl:text-lg">Welcome to QuickThink</p>
-            <h1 className="bold pb-4 text-6xl xl:text-8xl">
+            <h1 className="px-3 pb-4 text-6xl font-bold xl:text-8xl">
               Inform, Assess, Excel.
             </h1>
             <div className="flex w-[50%] max-w-md flex-row flex-wrap gap-x-3">
               <button className="flex-grow rounded bg-[#6e8ccc] px-3 py-1 text-lg text-white">
-                <Link href={"/auth/register"}>Join the Platform</Link>
+                <Link href={"/auth/login"}>Login</Link>
               </button>
               <button className="flex-grow rounded px-3 py-1 text-lg text-[#7ea1ed] outline outline-1 outline-[#7ea1ed]">
                 <Link href={"/test"}>Take a Test</Link>
               </button>
+              {/*
+              <button className="flex-grow rounded px-3 py-1 text-lg text-[#7ea1ed] outline outline-1 outline-[#7ea1ed]">
+                <Link href={"/explore"}>Take a Test</Link>
+              </button>
+              */}
             </div>
           </div>
         </HeroText>
@@ -43,7 +48,9 @@ export function Hero(props: { children: ReactNode }) {
 }
 export function HeroText(props: { children: ReactNode }) {
   return (
-    <div className="flex w-[65%] flex-col justify-center">{props.children}</div>
+    <div className="flex w-[65%] flex-col items-center justify-center p-3">
+      {props.children}
+    </div>
   );
 }
 
