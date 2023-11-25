@@ -53,6 +53,7 @@ export const tests = pgTable("tests", {
   updatedAt: timestamp("updated_at").defaultNow(),
   difficulty: difficultyEnum("difficulty").default("EASY"),
   visibility: visibilityEnum("visibility").default("public"),
+  courseId: uuid("course_id").references(() => courses.id),
 });
 
 export const teacher_test = pgTable("teacher_test", {
@@ -89,18 +90,10 @@ export const sessions = pgTable("sessions", {
   startTime: timestamp("start_time").defaultNow(),
 });
 
-export const user_org = pgTable(
-  "user_organization",
-  {
-    userId: uuid("user_id"),
-    organizationId: uuid("organization_id"),
-  },
-  (table) => {
-    return {
-      pk: primaryKey(table.userId, table.organizationId),
-    };
-  },
-);
+export const user_org = pgTable("user_organization", {
+  userId: uuid("user_id"),
+  organizationId: uuid("organization_id"),
+});
 
 export const courses = pgTable("courses", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
