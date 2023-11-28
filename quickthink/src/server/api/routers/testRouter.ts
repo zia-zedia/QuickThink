@@ -10,6 +10,9 @@ import {
   tests,
   Question,
   Answer,
+  ZodQuestion,
+  ZodAnswer,
+  ResultInsert,
 } from "~/drizzle/schema";
 import {
   authenticatedProcedure,
@@ -154,6 +157,21 @@ export const testRouter = createTRPCRouter({
       const remainingTime = calculateRemainingTime(maxTestTime);
       console.log(remainingTime);
       return { session: session, timer: remainingTime };
+    }),
+  submitTest: publicProcedure
+    .input(
+      z.object({
+        testId: z.string().uuid(),
+        TestAnswers: z.array(
+          z.object({
+            question: ZodQuestion,
+            answers: z.array(z.object({ answer: ZodAnswer })),
+          }),
+        ),
+      }),
+    )
+    .mutation(({ ctx, input }) => {
+      return;
     }),
 });
 

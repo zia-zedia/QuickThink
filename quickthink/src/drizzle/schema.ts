@@ -12,7 +12,7 @@ import {
   primaryKey,
   interval,
 } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const organization = pgTable("organization", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
@@ -79,7 +79,9 @@ export const answers = pgTable("answers", {
 
 export const results = pgTable("results", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
-  testId: uuid("test_id").references(() => tests.id),
+  testId: uuid("test_id")
+    .references(() => tests.id)
+    .notNull(),
   studentId: uuid("student_id").references(() => users.id),
   grade: real("grade"),
 });
@@ -101,6 +103,9 @@ export const courses = pgTable("courses", {
 });
 
 export const UserInsert = createInsertSchema(users);
+export const ZodQuestion = createSelectSchema(questions);
+export const ZodAnswer = createSelectSchema(answers);
+export const ResultInsert = createInsertSchema(results);
 export type TestType = typeof tests.$inferSelect;
 export type SessionInsert = typeof sessions.$inferInsert;
 export type Question = typeof questions.$inferInsert;

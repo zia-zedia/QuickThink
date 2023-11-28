@@ -9,6 +9,7 @@ import {
   useContext,
 } from "react";
 import { set } from "zod";
+import test from "node:test";
 
 export function TestPageLayout(props: { children: ReactNode }) {
   return (
@@ -213,7 +214,11 @@ export function TestControls(props: {
   leaveHandler: () => void;
   timeLeft: TimeType;
 }) {
-  const timer = useTimer(props.timeLeft);
+  const timer = useTimer(props.timeLeft, handleTimeRunOut);
+  function handleTimeRunOut() {
+    location.replace(location.href);
+    return;
+  }
 
   return (
     <div className="flex w-full flex-row justify-between">
@@ -259,8 +264,21 @@ export function Test(props: { testId: string }) {
     });
 
   useEffect(() => {
-    if (testAnswers.length === 3) {
-      console.log("hi");
+    const isCompleted = () => {
+      if (testAnswers.length < data?.length!) {
+        return false;
+      }
+      for (let i = 0; i < testAnswers.length; i++) {
+        if (testAnswers[i]?.answers[0] === undefined) {
+          return false;
+        }
+      }
+      return true;
+    };
+    if (isCompleted()) {
+      testAnswers.map((qna) => {
+        console.log(qna.answers[0]);
+      });
       setCompleted(true);
       return;
     }
@@ -297,6 +315,7 @@ export function Test(props: { testId: string }) {
   }
 
   function HandleSubmit() {
+    console.log("submitting");
     if (testingAnswers.length < data!.length) {
       return;
     }
@@ -475,21 +494,21 @@ export function Loading() {
   return <>Loading...</>;
 }
 
-export function useTimer(remainingTime: TimeType) {
+export function useTimer(remainingTime: TimeType, onTimeRunOut: () => void) {
   const [time, setTime] = useState(remainingTime);
-
   useEffect(() => {
     const timerInterval = setInterval(() => {
       const newTime = decrementTimer(time);
-      setTime(newTime);
       if (
         newTime.days === 0 &&
         newTime.hours === 0 &&
         newTime.minutes === 0 &&
         newTime.seconds === 0
       ) {
+        onTimeRunOut();
         return;
       }
+      setTime(newTime);
     }, 1000);
 
     // Cleanup interval on component unmount
