@@ -26,10 +26,10 @@ export default function Home() {
             Inform, Assess, Excel.
           </h1>
           <div className="flex w-[50%] max-w-md flex-row flex-wrap gap-3">
-            <button className="flex-grow rounded bg-[#849EFA] px-3 py-1 text-lg text-white">
-              <Link href={"/auth/register"}>Join the Platform</Link>
+            <button className="flex-grow rounded bg-[#849EFA] px-3 py-1 text-lg text-white transition-all hover:-translate-y-[2px]">
+              <Link href={"/auth/login"}>Login</Link>
             </button>
-            <button className="flex-grow rounded px-3 py-1 text-lg text-[#7ea1ed] outline outline-1 outline-[#7ea1ed]">
+            <button className="flex-grow rounded px-3 py-1 text-lg text-[#7ea1ed] outline outline-1 outline-[#7ea1ed] transition-all hover:-translate-y-[2px]">
               <Link href={"/test"}>Take a Test</Link>
             </button>
           </div>
@@ -39,26 +39,31 @@ export default function Home() {
           <div className="text-4xl font-bold text-white">QuickThink</div>
         </RightSection>
       </Hero>
-      <section className="flex flex-col items-center bg-[#CADBFF] pt-10">
+      <section className="flex flex-col items-center gap-3 bg-[#CADBFF] py-10">
         <Section title="Why Us?">
           <CardContainer>
             <Card title="Flexible">
-              I love my mom, Lorem ipsum dolor sit, amet consectetur adipisicing
-              elit. Veniam, non dignissimos. Voluptatibus quisquam, cumque nulla
-              iste natus sequi unde? Velit reiciendis sapiente accusamus ducimus
-              incidunt voluptatum voluptate vero exercitationem! Atque.
+              We recognize that every learner is on a unique journey with
+              distinct goals and timelines. Our platform empowers you to create
+              your own learning path, tailored to your specific needs and
+              aspirations. Whether you're looking to upskill in a specific area
+              or explore a range of topics, our flexible structure ensures that
+              your learning experience is truly yours.
             </Card>
             <Card title="Supportive">
-              I love my mom, Lorem ipsum dolor sit, amet consectetur adipisicing
-              elit. Veniam, non dignissimos. Voluptatibus quisquam, cumque nulla
-              iste natus sequi unde? Velit reiciendis sapiente accusamus ducimus
-              incidunt voluptatum voluptate vero exercitationem! Atque.
+              We believe in the strength of a supportive network, where
+              individuals can lean on each other for guidance, inspiration, and
+              resources. Through our local events, workshops, and networking
+              opportunities, we aim to create a thriving ecosystem that fuels
+              personal and collective growth.
             </Card>
             <Card title="Collaborative">
-              I love my mom, Lorem ipsum dolor sit, amet consectetur adipisicing
-              elit. Veniam, non dignissimos. Voluptatibus quisquam, cumque nulla
-              iste natus sequi unde? Velit reiciendis sapiente accusamus ducimus
-              incidunt voluptatum voluptate vero exercitationem! Atque.
+              Collaboration is at the heart of our Local Team initiative. We
+              believe in the strength of a supportive network, where individuals
+              can lean on each other for guidance, inspiration, and resources.
+              Through our local events, workshops, and networking opportunities,
+              we aim to create a thriving ecosystem that fuels personal and
+              collective growth.
             </Card>
           </CardContainer>
         </Section>
@@ -72,10 +77,11 @@ export default function Home() {
               opportunities present, we tailor our programs to empower
               individuals and organizations on a local level.
             </Card>
-            <Card title="Collaborative">
-              I love my mom, Lorem ipsum dolor sit, amet consectetur adipisicing
-              elit. Veniam, non dignissimos. Voluptatibus quisquam, cumque nulla
-              iste natus sequi unde? Velit reiciendis sapiente accusamus ducimus
+            <Card title="Focused on you">
+              Embrace the freedom to learn, grow, and succeed on your terms. Our
+              commitment to flexibility ensures that your educational journey is
+              as unique and dynamic as you are. Welcome to a world of learning
+              without boundaries
             </Card>
           </CardContainer>
         </Section>
@@ -162,16 +168,9 @@ export function Footer() {
           <h1 className="font-bold">Contact Us</h1>
           <p>Email: 202000144@student.polytechnic.bh</p>
           <p>Phone Number: +973 1777 3432</p>
-          <p className="">
-            <h1 className="font-bold">Learn More</h1>
-            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Libero
-            repellat, eius excepturi quisquam suscipit aut nobis corrupti sunt
-            delectus ad quos illum esse doloribus id obcaecati voluptatum
-            temporibus consequuntur corporis!
-          </p>
         </section>
         <p className="text-center">
-          Sayed Dhiya Algallaf, Copyright © 2023-2024, All rights are reserved.
+          Sayed Dhiya Algallaf, Copyright © 2023-2024, All rights reserved.
         </p>
       </div>
     </div>

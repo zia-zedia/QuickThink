@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { create } from "domain";
 import { and, eq } from "drizzle-orm";
+import test from "node:test";
 import { Input } from "postcss";
 import { z } from "zod";
 import {
@@ -13,7 +14,11 @@ import {
   ZodQuestion,
   ZodAnswer,
   ResultInsert,
+  results,
+  TestType,
+  AnswerType,
 } from "~/drizzle/schema";
+import { Answer } from "~/pages/test/[id]";
 import {
   authenticatedProcedure,
   createTRPCRouter,
@@ -26,7 +31,14 @@ export const testRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const db = ctx.db;
       const testQuery = await db
-        .select({ question: questions, answers: answers })
+        .select({
+          question: questions,
+          answers: {
+            id: answers.id,
+            content: answers.content,
+            questionId: answers.questionId,
+          },
+        })
         .from(questions)
         .leftJoin(answers, eq(answers.questionId, questions.id))
         .where(eq(questions.testId, input.test_id));
@@ -136,12 +148,18 @@ export const testRouter = createTRPCRouter({
           testTimeLength: tests.timeLength,
         })
         .from(sessions)
-        .where(eq(sessions.id, input.sessionId))
+        .where(
+          and(
+            eq(sessions.id, input.sessionId),
+            eq(sessions.testId, input.test_id),
+          ),
+        )
         .leftJoin(tests, eq(sessions.testId, tests.id));
       if (session.length === 0) {
         throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Your session has run out.",
+          code: "NOT_FOUND",
+
+          message: "We haven't found this session for this test",
         });
       }
       const maxTestTime = new Date(
@@ -165,15 +183,30 @@ export const testRouter = createTRPCRouter({
         TestAnswers: z.array(
           z.object({
             question: ZodQuestion,
-            answers: z.array(z.object({ answer: ZodAnswer })),
+            answers: z.array(ZodAnswer),
           }),
         ),
       }),
     )
-    .mutation(({ ctx, input }) => {
-      return;
+    .mutation(async ({ ctx, input }) => {
+      const grade = GradeTest(input.TestAnswers);
     }),
 });
+
+function GradeTest(
+  testAnswers: Array<{ question: Question; answers: AnswerType[] }>,
+) {
+  const maxGrade = testAnswers.reduce((acc, curr) => {
+    return acc + curr.question.grade!;
+  }, 0);
+  const correctAnswers = testAnswers.filter((value) => {
+    return value.answers.map((answer) => {
+      answer.isCorrect === true;
+    });
+  });
+  console.log(correctAnswers.length);
+  console.log(maxGrade);
+}
 
 function calculateRemainingTime(endTime: Date) {
   const currentTime = new Date();

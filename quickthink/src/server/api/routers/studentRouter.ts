@@ -4,10 +4,13 @@ import {
   publicProcedure,
   authenticatedProcedure,
 } from "../trpc";
-import { tests } from "~/drizzle/schema";
+import { courses, tests } from "~/drizzle/schema";
 
 export const studentRouter = createTRPCRouter({
   getTestList: publicProcedure.query(async ({ ctx }) => {
     return await ctx.db.select().from(tests);
+  }),
+  getCourses: publicProcedure.query(async ({ ctx }) => {
+    return await ctx.db.select().from(courses);
   }),
 });

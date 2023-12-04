@@ -46,7 +46,7 @@ export function LoginForm() {
     setEmailError({ isValid: true, message: "" });
   }, [email]);
 
-  const loginUser = api.example.loginUser.useMutation({
+  const loginUser = api.auth.login.useMutation({
     onSuccess: (data) => {
       window.location.href = "/student";
     },
