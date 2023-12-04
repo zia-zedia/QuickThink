@@ -35,6 +35,7 @@ export const users = pgTable(
     };
   },
 );
+
 export const difficultyEnum = pgEnum("difficulty", ["EASY", "MED", "HARD"]);
 export const visibilityEnum = pgEnum("visibility", [
   "public",
@@ -54,6 +55,16 @@ export const tests = pgTable("tests", {
   difficulty: difficultyEnum("difficulty").default("EASY"),
   visibility: visibilityEnum("visibility").default("public"),
   courseId: uuid("course_id").references(() => courses.id),
+});
+
+export const user_test = pgTable("user_test", {
+  id: serial("id").primaryKey().notNull(),
+  userId: uuid("user_id")
+    .references(() => users.id)
+    .notNull(),
+  testId: uuid("test_id")
+    .references(() => tests.id)
+    .notNull(),
 });
 
 export const teacher_test = pgTable("teacher_test", {
@@ -97,6 +108,16 @@ export const user_org = pgTable("user_organization", {
   organizationId: uuid("organization_id"),
 });
 
+export const user_courses = pgTable("user_courses", {
+  id: serial("id").primaryKey().notNull(),
+  userId: uuid("user_id")
+    .references(() => users.id)
+    .notNull(),
+  courseId: uuid("course_id")
+    .references(() => courses.id)
+    .notNull(),
+});
+
 export const courses = pgTable("courses", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   name: text("course_name").notNull(),
@@ -105,8 +126,8 @@ export const courses = pgTable("courses", {
 export const UserInsert = createInsertSchema(users);
 export const ZodQuestion = createSelectSchema(questions);
 export const ZodAnswer = createSelectSchema(answers);
-export const ResultInsert = createInsertSchema(results);
 export type TestType = typeof tests.$inferSelect;
 export type SessionInsert = typeof sessions.$inferInsert;
 export type Question = typeof questions.$inferInsert;
 export type Answer = Omit<typeof answers.$inferInsert, "isCorrect">;
+export type ResultInsert = typeof results.$inferInsert;
