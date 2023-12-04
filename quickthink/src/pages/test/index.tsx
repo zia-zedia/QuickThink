@@ -26,7 +26,7 @@ export default function Home() {
     setError(null);
   }, [testId]);
 
-  function handleFormSubmit(formData: string) {
+  function handleFormSubmit(formData: any) {
     event?.preventDefault();
     if (error?.isError) {
       return;
@@ -34,7 +34,7 @@ export default function Home() {
     if (!testId) {
       return;
     }
-    console.log("yeah");
+    location.replace(location.href + `/${formData.test_id}`);
   }
   return (
     <>
@@ -47,13 +47,20 @@ export default function Home() {
         <Section title="Enter a test id">
           <form
             className="flex w-full flex-row justify-between gap-2"
-            onSubmit={handleFormSubmit}
+            onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+              event.preventDefault();
+              const formData = {
+                test_id: (event.target as any).test_id.value,
+              };
+              handleFormSubmit(formData);
+            }}
           >
             <input
               type="text"
+              name="test_id"
               className={`${
                 error?.isError
-                  ? "outline-blue"
+                  ? "outline outline-1 outline-red-500"
                   : "outline outline-1 outline-[#1A2643]"
               } flex-grow rounded-lg p-3`}
               placeholder="Test ID"
@@ -69,7 +76,9 @@ export default function Home() {
               Submit
             </button>
           </form>
-          <p>{error?.isError ? error.message : null}</p>
+          <p className="text-red-500">
+            {error?.isError ? error.message : null}
+          </p>
         </Section>
       </main>
     </>

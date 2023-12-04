@@ -86,7 +86,7 @@ export function TestPage() {
   if (isLoading) {
     return <Loading />;
   }
-  if (isError) {
+  if (isError && !(error.data?.code === "NOT_FOUND")) {
     return <Error message={error.message} code={error.data?.code} />;
   }
 
@@ -111,7 +111,7 @@ export function TestPage() {
   }
 
   function HandleTestStart() {
-    if (!sessionId) {
+    if (!sessionId || error?.data?.code === "NOT_FOUND") {
       startSession.mutate({ test_id: test_id! });
     }
     setTestStarted(true);
@@ -132,7 +132,7 @@ export function TestPage() {
             testStarted={testStarted}
             startOnClick={HandleTestStart}
             leaveOnClick={HandleLeaveTest}
-            timeLeft={timeLeft ? timeLeft : data.timer!}
+            timeLeft={timeLeft ? timeLeft : data?.timer}
           />
           {testStarted ? <Test testId={test_id} /> : null}
         </div>
@@ -246,10 +246,6 @@ export function TestControls(props: {
   );
 }
 
-export function StartTestButton(props: { onClick: () => void }) {
-  return <>hi</>;
-}
-
 export function Test(props: { testId: string }) {
   const [testAnswers, setTestAnswers] = useState<
     Array<{
@@ -262,6 +258,7 @@ export function Test(props: { testId: string }) {
     api.tests.getTestDataWithId.useQuery({
       test_id: props.testId!,
     });
+  const submitTest = api.tests.submitTest.useMutation();
 
   useEffect(() => {
     const isCompleted = () => {
@@ -319,6 +316,11 @@ export function Test(props: { testId: string }) {
     if (testingAnswers.length < data!.length) {
       return;
     }
+    console.log(testAnswers);
+    const submittableTestAnswers = submitTest.mutate({
+      testId: props.testId,
+      TestAnswers: testAnswers!,
+    });
   }
 
   return (

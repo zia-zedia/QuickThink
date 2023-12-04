@@ -123,7 +123,6 @@ export function RegisterForm() {
               type="email"
               placeholder="Enter email"
               name="email"
-              onBlur={checkEmail}
             />
           </div>
           <div className="flex flex-col gap-1 font-light">

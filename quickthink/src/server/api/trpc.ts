@@ -7,7 +7,8 @@ import { supabase, user, session } from "../auth/auth";
 import { users } from "~/drizzle/schema";
 import { eq } from "drizzle-orm";
 
-type CreateContextOptions = Record<string, never>; const createInnerTRPCContext = (_opts: CreateContextOptions) => {
+type CreateContextOptions = Record<string, never>;
+const createInnerTRPCContext = (_opts: CreateContextOptions) => {
   return {
     db,
     supabase,
@@ -53,8 +54,9 @@ const isAuthenticated = middleware(async (_opts) => {
 const isTeacher = middleware(async (_opts) => {
   const db = _opts.ctx.db;
   const authUser = await supabase.auth.getUser();
-  console.log(authUser);
+
   if (authUser.data.user === null) {
+    console.log("NO AUTH USER NOPE");
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 
@@ -64,10 +66,13 @@ const isTeacher = middleware(async (_opts) => {
     .where(eq(users.authId, authUser.data.user?.id));
 
   if (user.length === 0) {
+    console.log("NO USER NOPE");
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 
-  return _opts.next();
+  return _opts.next({
+    ctx: { user: authUser },
+  });
 });
 export const publicProcedure = t.procedure;
 export const authenticatedProcedure = t.procedure.use(isAuthenticated);
