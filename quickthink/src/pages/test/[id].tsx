@@ -8,8 +8,6 @@ import {
   createContext,
   useContext,
 } from "react";
-import { set } from "zod";
-import test from "node:test";
 
 export function TestPageLayout(props: { children: ReactNode }) {
   return (
@@ -26,33 +24,6 @@ export default function TestPageContainer() {
     </TestPageLayout>
   );
 }
-
-export const testingQuestion: Question = {
-  id: 0,
-  answerAmount: 1,
-  content: "Questioning the question about questioning",
-  testId: "something",
-};
-
-export const testingAnswers: Answer[] = [
-  {
-    id: 0,
-    questionId: 0,
-    content:
-      "I love this shit I love this shit I love this shit I love this shit I love this shit I love this shit I love this shit I love this shit I love this shit",
-  },
-  { id: 1, questionId: 0, content: "I love this shit" },
-  { id: 2, questionId: 0, content: "I love this shit" },
-  { id: 3, questionId: 0, content: "I love this shit" },
-];
-
-// export function TestingTestPage() {
-//   return (
-//     <div className="w-full max-w-2xl">
-//       <QnA qna={{ question: testingQuestion, answers: testingAnswers }} />
-//     </div>
-//   );
-// }
 
 export function TestPage() {
   const router = useRouter();

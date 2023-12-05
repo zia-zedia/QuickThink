@@ -41,7 +41,7 @@ export const visibilityEnum = pgEnum("visibility", [
   "public",
   "private",
   "organization",
-  "not_published",
+  "draft",
 ]);
 
 export const tests = pgTable("tests", {

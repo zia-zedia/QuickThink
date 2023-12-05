@@ -110,7 +110,7 @@ export function Section(props: { title: string; children: ReactNode }) {
 
 export function Card(props: { title: string; children: ReactNode }) {
   return (
-    <div className="w-full rounded-lg p-3 outline outline-1 outline-[#CADBFF] transition-all hover:-translate-y-1 hover:shadow-md hover:shadow-[#CADBFF] hover:outline-[#849EFA] md:max-w-[50%]">
+    <div className="w-full rounded-lg bg-white p-3 outline outline-1 outline-[#CADBFF] transition-all hover:-translate-y-1 hover:shadow-md hover:shadow-[#CADBFF] hover:outline-[#849EFA] md:max-w-[50%]">
       <h1 className="pb-1 text-xl font-semibold">{props.title}</h1>
       <div>{props.children}</div>
     </div>
