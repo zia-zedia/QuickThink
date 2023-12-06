@@ -5,34 +5,62 @@ import {
   useContext,
   useEffect,
 } from "react";
-import { Question, TestType } from "~/drizzle/schema";
+import { AnswerType, Question, TestType, tests } from "~/drizzle/schema";
 import { api } from "~/utils/api";
 import { CardContainer } from "..";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
-import { number } from "zod";
-
-export type TeacherPageContextData = {
-  currentTestId: string;
-  SetCurrentTestId: (testId: string) => void;
-};
 
 export const TeacherPageContext = createContext<TeacherPageContextData>();
 
 export default function TeacherLayout() {
-  const [currentTestId, SetCurrentTestId] = useState("");
+  const [currentTestId, setCurrentTestId] = useState("");
+  const [testStates, setTestStates] = useState<Array<TestState>>([]);
+
+  useEffect(() => {
+    /*
+    testStates.map((values) => {
+      console.log(values.testId);
+      values.state.map((state) => {
+        console.log("yeah");
+        console.log(state.question.content);
+      });
+    });
+  */
+  }, [testStates]);
+
   return (
     <>
-      <TeacherPageContext.Provider value={{ currentTestId, SetCurrentTestId }}>
+      <TeacherPageContext.Provider
+        value={{ currentTestId, setCurrentTestId, testStates, setTestStates }}
+      >
         <YourTests>
-          {/*
-          <div className="">
-          <TestSection />
-          </div>
-  */}
-          <div className="h-screen w-full p-4 lg:max-w-[75%]">
+          <div className="h-full w-full p-4 lg:max-w-[75%]">
             <TestSection>
               <TestTopBar />
-              <DragDropContext onDragEnd={() => {}}>
+              <DragDropContext
+                onDragEnd={(result, source) => {
+                  if (!result.destination) return;
+                  const test = testStates.filter(
+                    (state) => state.testId === currentTestId,
+                  )[0]?.state!;
+                  const newOrder = reorder(
+                    test,
+                    result.source.index,
+                    result.destination.index,
+                  );
+                  const newTestState = testStates.map((state) => {
+                    if (!(state.testId === currentTestId)) {
+                      return state;
+                    } else {
+                      return {
+                        ...state,
+                        state: newOrder,
+                      };
+                    }
+                  });
+                  setTestStates(newTestState);
+                }}
+              >
                 <QuestionsSection />
               </DragDropContext>
             </TestSection>
@@ -44,10 +72,31 @@ export default function TeacherLayout() {
 }
 
 export function YourTests(props: { children?: ReactNode }) {
-  const { isLoading, isError, data, error } =
+  const { isLoading, isError, data, error, isSuccess, isPreviousData } =
     api.teacher.getTestList.useQuery();
 
-  const { currentTestId } = useContext(TeacherPageContext);
+  const { currentTestId, testStates, setTestStates } =
+    useContext(TeacherPageContext);
+
+  useEffect(() => {
+    if (isSuccess && data.length > 0 && !isPreviousData) {
+      const newTestStates: Array<TestState> = [];
+      data.map((value) => {
+        const testInState = testStates.filter(
+          (state) => state.testId === value.tests.id,
+        );
+        if (testInState.length > 0) {
+          newTestStates.push({
+            testId: value.tests.id,
+            state: testInState[0]?.state!,
+          });
+          return;
+        }
+        newTestStates.push({ testId: value.tests.id, state: [] });
+      });
+      setTestStates(newTestStates);
+    }
+  }, [data]);
 
   if (isLoading) {
     return <>Loading...</>;
@@ -90,10 +139,10 @@ export function TestInfoContainer(props: {
 }) {
   const test = props.test;
   const selected = props.selected;
-  const { SetCurrentTestId } = useContext(TeacherPageContext);
+  const { setCurrentTestId } = useContext(TeacherPageContext);
 
   function handleClick() {
-    SetCurrentTestId(test.id);
+    setCurrentTestId(test.id);
     console.log(test.id);
   }
 
@@ -175,29 +224,48 @@ export function TestTopBar() {
           </p>
         </div>
       </div>
-      <ul className="flex flex-row justify-end gap-3 rounded-b-lg bg-[#1A2643] px-3 py-1 text-white">
-        <button className="">Hello</button>
-        <button className="">Hello</button>
+      <ul className="flex flex-row justify-between  rounded-b-lg bg-[#1A2643] px-3 py-1 text-white">
+        <button className="">Save Draft</button>
+        <div className="flex flex-row gap-5">
+          <button className="">Delete Test</button>
+          <button className="">Publish</button>
+        </div>
       </ul>
     </div>
   );
 }
 
-export const randomStuff = [
-  { id: 1, title: "something1" },
-  { id: 2, title: "something2" },
-  { id: 3, title: "something3" },
-];
-
 export function QuestionsSection() {
   const testId = useContext(TeacherPageContext).currentTestId;
-
   if (!testId) {
     return null;
   }
+  const { testStates, setTestStates } = useContext(TeacherPageContext);
 
-  const { isError, isLoading, data, error } =
-    api.tests.getTestDataWithId.useQuery({ test_id: testId });
+  const {
+    isError,
+    isLoading,
+    data,
+    error,
+    isSuccess,
+    isPreviousData,
+    isRefetching,
+  } = api.tests.getTestDataWithId.useQuery({ test_id: testId });
+
+  useEffect(() => {
+    if (isSuccess && !isRefetching) {
+      const newStateArray = testStates.map((state) => {
+        if (state.testId != testId) {
+          return state;
+        }
+        return {
+          ...state,
+          state: data,
+        };
+      });
+      setTestStates(newStateArray);
+    }
+  }, [data]);
 
   if (isLoading) {
     return <>Loading...</>;
@@ -206,33 +274,155 @@ export function QuestionsSection() {
   if (isError) {
     return <>An error occured: {error.message}</>;
   }
+
+  const defaultQuestion: Question = {
+    id: Math.random(),
+    answerAmount: 1,
+    content: "New Question",
+    grade: 1,
+    testId: testId,
+    sequence: testStates.length,
+  };
+
+  const defaultAnswer: AnswerType = {
+    id: Math.random(),
+    questionId: 0,
+    content: "New Answer",
+    isCorrect: false,
+  };
+
+  const test = testStates.filter((state) => state.testId === testId)[0]?.state!;
+  function addQuestion() {
+    const newTestStates = testStates.map((state) => {
+      if (state.testId === testId) {
+        return {
+          ...state,
+          state: [...state.state].concat({
+            question: defaultQuestion,
+            answers: [],
+          }),
+        };
+      }
+      return state;
+    });
+    setTestStates(newTestStates);
+  }
+
+  function deleteQuestion(questionId: number) {
+    console.log(questionId);
+    const newTestStates = testStates.map((state) => {
+      if (state.testId === testId) {
+        return {
+          ...state,
+          state: [...state.state].filter(
+            (value) => value.question.id != questionId,
+          ),
+        };
+      }
+      return state;
+    });
+    setTestStates(newTestStates);
+  }
+
+  function addAnswer(questionId: number) {
+    console.log("adding answer " + questionId);
+    const newTestStates = testStates.map((state) => {
+      if (state.testId === testId) {
+        return {
+          ...state,
+          state: [...state.state].map((QnA) => {
+            if (QnA.question.id === questionId) {
+              return {
+                ...QnA,
+                answers: [...QnA.answers].concat({
+                  ...defaultAnswer,
+                  questionId: questionId,
+                }),
+              };
+            }
+            return QnA;
+          }),
+        };
+      }
+      return state;
+    });
+    setTestStates(newTestStates);
+  }
+
   return (
-    <Droppable droppableId={testId}>
-      {(provided, snapshot) => {
-        return (
-          <div
-            className="w-full border border-black p-2"
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-          >
-            {data.map((QnA, index) => {
-              return (
-                <Question
-                  key={QnA.question.id}
-                  question={QnA.question}
-                  index={index}
-                />
-              );
-            })}
-            {provided.placeholder}
-          </div>
-        );
-      }}
-    </Droppable>
+    <div>
+      <Droppable droppableId={"question_list"}>
+        {(provided, snapshot) => {
+          return (
+            <div
+              className="flex w-full flex-col gap-y-3 p-2"
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              {test.map((QnA, index) => {
+                return (
+                  <div className="">
+                    <Question
+                      key={QnA.question.id}
+                      question={QnA.question}
+                      index={index}
+                      handleDelete={deleteQuestion}
+                    >
+                      <AnswerSection
+                        answers={QnA.answers}
+                        handleAnswerAdd={addAnswer}
+                        questionId={QnA.question.id!}
+                      />
+                    </Question>
+                  </div>
+                );
+              })}
+              {provided.placeholder}
+            </div>
+          );
+        }}
+      </Droppable>
+      <div className="flex w-full flex-row justify-center p-2">
+        <button
+          className="w-full rounded-lg p-2 text-center text-blue-300 outline outline-1 outline-blue-300"
+          onClick={addQuestion}
+        >
+          Add Question
+        </button>
+      </div>
+    </div>
   );
 }
 
-export function Question(props: { question: Question; index: number }) {
+export function AnswerSection(props: {
+  questionId: number;
+  answers: AnswerType[];
+  handleAnswerAdd: (questionId: number) => void;
+}) {
+  const answers = props.answers;
+  return (
+    <div className="flex w-full flex-row flex-wrap gap-y-4 ">
+      {answers.map((answer) => {
+        return <Answer answer={answer} />;
+      })}
+      <button
+        className="w-full rounded-lg bg-white p-2 text-center text-blue-500 outline outline-1 outline-blue-200"
+        onClick={() => {
+          props.handleAnswerAdd(props.questionId);
+        }}
+      >
+        Add Answer
+      </button>
+    </div>
+  );
+}
+
+export function Question(props: {
+  question: Question;
+  index: number;
+  handleDelete: (questionId: number) => void;
+  children?: ReactNode;
+}) {
   const question = props.question;
   const index = props.index;
 
@@ -245,12 +435,26 @@ export function Question(props: { question: Question; index: number }) {
       {(provided, snapshot) => {
         return (
           <div
-            className="rounded bg-blue-300 p-2 text-black"
+            className="flex flex-wrap gap-y-2 rounded-lg bg-[#CADBFF] p-3 text-[#1A2643]"
             ref={provided.innerRef}
             {...provided.draggableProps}
             {...provided.dragHandleProps}
           >
-            {question.content}
+            <div className="flex w-full flex-row justify-between ">
+              <h1 className="text-lg font-bold">{question.content}</h1>
+              <div className="flex flex-row gap-3">
+                <button
+                  className="text-lg"
+                  onClick={() => {
+                    props.handleDelete(question.id!);
+                  }}
+                >
+                  Delete
+                </button>
+                <button className="text-lg">Edit</button>
+              </div>
+            </div>
+            {props.children}
           </div>
         );
       }}
@@ -258,26 +462,31 @@ export function Question(props: { question: Question; index: number }) {
   );
 }
 
-export function DragTest(props: { index: number; test: string }) {
+export function Answer(props: { answer: AnswerType }) {
+  const answer = props.answer;
   return (
-    <Draggable draggableId={props.index.toString()} index={props.index}>
-      {(provided) => {
-        return (
-          <div
-            ref={provided.innerRef}
-            {...provided.draggableProps}
-            {...provided.draggableProps}
-          >
-            {props.test}
-          </div>
-        );
-      }}
-    </Draggable>
+    <div className="w-full rounded bg-white p-3">
+      <h1 className="text-black">{answer.content}</h1>
+    </div>
   );
 }
 
-export function QuestionContainer(props: { children?: ReactNode }) {
-  return <div>{props.children}</div>;
-}
+export type TestState = {
+  testId: string;
+  state: Array<{ question: Question; answers: AnswerType[] }>;
+};
 
-export function AnswerContainer() {}
+export type TeacherPageContextData = {
+  currentTestId: string;
+  setCurrentTestId: (testId: string) => void;
+  testStates: Array<TestState>;
+  setTestStates: (testState: Array<TestState>) => void;
+};
+
+const reorder = (list: Array<any>, startIndex: number, endIndex: number) => {
+  const result = Array.from(list);
+  const [removed] = result.splice(startIndex, 1);
+  result.splice(endIndex, 0, removed);
+
+  return result;
+};

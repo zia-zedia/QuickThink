@@ -63,6 +63,7 @@ export const questions = pgTable("questions", {
   content: text("content"),
   testId: uuid("test_id").references(() => tests.id),
   grade: integer("grade").notNull().default(1),
+  sequence: integer("sequence"),
   answerAmount: integer("answer_amount"),
 });
 
