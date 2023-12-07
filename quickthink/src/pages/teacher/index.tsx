@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
 } from "react";
 import { AnswerType, Question, TestType, tests } from "~/drizzle/schema";
 import { api } from "~/utils/api";
@@ -397,8 +398,9 @@ export function AnswerSection(props: {
   questionId: number;
   answers: AnswerType[];
   handleAnswerAdd: (questionId: number) => void;
+  isEditable?: boolean;
 }) {
-  const answers = props.answers;
+  const { answers } = props;
   return (
     <div className="flex w-full flex-row flex-wrap gap-y-4 ">
       {answers.map((answer) => {
@@ -424,6 +426,9 @@ export function Question(props: {
 }) {
   const question = props.question;
   const index = props.index;
+  const [title, setTitle] = useState(question.content!);
+  const [isEditing, setIsEditing] = useState(false);
+  const inputRef = useRef(null);
 
   return (
     <Draggable
@@ -440,7 +445,38 @@ export function Question(props: {
             {...provided.dragHandleProps}
           >
             <div className="flex w-full flex-row justify-between ">
-              <h1 className="text-lg font-bold">{question.content}</h1>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(event) => {
+                    setTitle(event.target.value);
+                  }}
+                  onBlur={() => {
+                    setIsEditing(false);
+                    if (title === "") {
+                      setTitle(question.content!);
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      inputRef.current.blur();
+                    }
+                  }}
+                  ref={inputRef}
+                  autoFocus={true}
+                  className="w-full bg-[#CADBFF] text-[#1A2643] outline-none "
+                />
+              ) : (
+                <h1
+                  className="text-lg font-bold"
+                  onClick={() => {
+                    setIsEditing(true);
+                  }}
+                >
+                  {title}
+                </h1>
+              )}
               <div className="flex flex-row gap-3">
                 <button
                   className="text-lg"
@@ -448,9 +484,14 @@ export function Question(props: {
                     props.handleDelete(question.id!);
                   }}
                 >
-                  Delete
+                  <div className="h-7 w-7">
+                    <img
+                      src={"/trash_icon.svg"}
+                      alt="Delete"
+                      className="fill-[#1A2643] object-contain"
+                    />
+                  </div>
                 </button>
-                <button className="text-lg">Edit</button>
               </div>
             </div>
             {props.children}
@@ -462,10 +503,77 @@ export function Question(props: {
 }
 
 export function Answer(props: { answer: AnswerType }) {
-  const answer = props.answer;
+  const { answer } = props;
+  const [isCorrect, setIsCorrect] = useState(answer.isCorrect);
+  const [ddlOpen, setDDLOpen] = useState(false);
+
   return (
     <div className="w-full rounded bg-white p-3">
-      <h1 className="text-black">{answer.content}</h1>
+      <div className="flex flex-row justify-between">
+        <div className="flex flex-row gap-3">
+          {isCorrect ? (
+            <div className="h-7 w-7 ">
+              <img
+                src={"/green_tick.png"}
+                alt="Correct Answer"
+                className="w-full fill-[#1A2643] object-cover"
+                onClick={() => {
+                  setIsCorrect(!isCorrect);
+                }}
+              />
+            </div>
+          ) : (
+            <div
+              className="h-7 w-7"
+              onClick={() => {
+                setIsCorrect(!isCorrect);
+              }}
+            >
+              <img
+                src={"/red_cross.png"}
+                alt="Wrong Answer"
+                className="w-full fill-[#1A2643] object-cover"
+              />
+            </div>
+          )}
+          <h1 className="text-black">{answer.content}</h1>
+        </div>
+        <div className="relative inline-block">
+          <div className="">
+            <button
+              className=""
+              onClick={() => {
+                setDDLOpen(!ddlOpen);
+              }}
+            >
+              <div className="h-6 w-6">
+                <img
+                  src={"/ellipsis_icon.svg"}
+                  alt="Dropdown Toggle"
+                  className="fill-[#1A2643] object-contain"
+                />
+              </div>
+            </button>
+          </div>
+          {ddlOpen ? (
+            <div
+              className="absolute right-0 z-10 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+              role="menu"
+              aria-orientation="vertical"
+              aria-labelledby="menu-button"
+            >
+              <div className="w-full p-2" role="none">
+                <button
+                  className="w-full rounded px-4 py-2 text-sm text-[#1A2643] transition-all hover:bg-gray-300 hover:text-white"
+                  id="menu-item-1"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
