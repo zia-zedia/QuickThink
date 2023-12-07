@@ -248,7 +248,6 @@ export function QuestionsSection() {
     data,
     error,
     isSuccess,
-    isPreviousData,
     isRefetching,
   } = api.tests.getTestDataWithId.useQuery({ test_id: testId });
 
