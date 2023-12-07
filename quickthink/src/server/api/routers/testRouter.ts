@@ -37,6 +37,7 @@ export const testRouter = createTRPCRouter({
             id: answers.id,
             content: answers.content,
             questionId: answers.questionId,
+            isCorrect: answers.isCorrect,
           },
         })
         .from(questions)
@@ -199,11 +200,7 @@ function GradeTest(
   const maxGrade = testAnswers.reduce((acc, curr) => {
     return acc + curr.question.grade!;
   }, 0);
-  const correctAnswers = testAnswers.filter((value) => {
-    return value.answers.map((answer) => {
-      answer.isCorrect === true;
-    });
-  });
+  const correctAnswers = testAnswers.map((value) => {});
   console.log(correctAnswers.length);
   console.log(maxGrade);
 }
