@@ -18,7 +18,6 @@ import {
   TestType,
   AnswerType,
 } from "~/drizzle/schema";
-import { Answer } from "~/pages/test/[id]";
 import {
   authenticatedProcedure,
   createTRPCRouter,
@@ -208,7 +207,6 @@ function GradeTest(
 function calculateRemainingTime(endTime: Date) {
   const currentTime = new Date();
   const timeDifference = endTime.getTime() - currentTime.getTime();
-
   const seconds = Math.floor((timeDifference / 1000) % 60);
   const minutes = Math.floor((timeDifference / 1000 / 60) % 60);
   const hours = Math.floor((timeDifference / (1000 * 60 * 60)) % 24);

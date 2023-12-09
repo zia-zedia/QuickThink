@@ -6,7 +6,13 @@ import {
   useEffect,
   useRef,
 } from "react";
-import { AnswerType, Question, TestType, tests } from "~/drizzle/schema";
+import {
+  AnswerType,
+  Question,
+  TestInsert,
+  TestType,
+  tests,
+} from "~/drizzle/schema";
 import { api } from "~/utils/api";
 import { CardContainer } from "..";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
@@ -89,11 +95,16 @@ export function YourTests(props: { children?: ReactNode }) {
         if (testInState.length > 0) {
           newTestStates.push({
             testId: value.tests.id,
+            testData: value.tests,
             state: testInState[0]?.state!,
           });
           return;
         }
-        newTestStates.push({ testId: value.tests.id, state: [] });
+        newTestStates.push({
+          testId: value.tests.id,
+          testData: value.tests,
+          state: [],
+        });
       });
       setTestStates(newTestStates);
     }
@@ -184,20 +195,32 @@ export function TestInfoContainer(props: {
 }
 
 export function TestSection(props: { children?: ReactNode }) {
+  const testSelected = useContext(TeacherPageContext).currentTestId;
+
   return (
-    <div className="h-full rounded-lg border shadow">{props.children}</div>
+    <div
+      className={`${
+        testSelected ? "h-full" : "h-screen"
+      } rounded-lg border shadow`}
+    >
+      {props.children}
+    </div>
   );
 }
 
 export function TestTopBar() {
   const testId = useContext(TeacherPageContext).currentTestId;
-
+  const currentTestState = useContext(TeacherPageContext).testStates.filter(
+    (states) => states.testId === testId,
+  );
   if (!testId) {
     return <div className="text-black">Select a test</div>;
   }
 
   const { isLoading, isError, data, error } =
     api.tests.getTestIntroWithId.useQuery({ test_id: testId });
+
+  const saveDraft = api.teacher.saveDraft.useMutation();
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -212,6 +235,18 @@ export function TestTopBar() {
     );
   }
   const test = data.testData!;
+
+  function handleDraftSaving() {
+    if (currentTestState.length === 0) {
+      return;
+    }
+    const currentTestData = currentTestState[0];
+    saveDraft.mutate({
+      test: currentTestData?.testData!,
+      draft: currentTestData?.state!,
+    });
+  }
+
   return (
     <div className="rounded-lg shadow">
       <div className="flex flex-row items-center justify-between gap-2 p-4">
@@ -226,7 +261,14 @@ export function TestTopBar() {
         </div>
       </div>
       <ul className="flex flex-row justify-between  rounded-b-lg bg-[#1A2643] px-3 py-1 text-white">
-        <button className="">Save Draft</button>
+        <button
+          className=""
+          onClick={() => {
+            handleDraftSaving();
+          }}
+        >
+          Save Draft
+        </button>
         <div className="flex flex-row gap-5">
           <button className="">Delete Test</button>
           <button className="">Publish</button>
@@ -580,6 +622,7 @@ export function Answer(props: { answer: AnswerType }) {
 
 export type TestState = {
   testId: string;
+  testData: TestType;
   state: Array<{ question: Question; answers: AnswerType[] }>;
 };
 

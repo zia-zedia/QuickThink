@@ -113,9 +113,14 @@ export const courses = pgTable("courses", {
 });
 
 export const UserInsert = createInsertSchema(users);
+export const ZodInsertTest = createInsertSchema(tests);
+export const ZodTest = createSelectSchema(tests);
 export const ZodQuestion = createSelectSchema(questions);
-export const ZodAnswer = createSelectSchema(answers).omit({ isCorrect: true });
+export const ZodAnswer = createSelectSchema(answers);
+export const ZodInsertQuestion = createInsertSchema(questions);
+export const ZodInsertAnswer = createInsertSchema(answers);
 export const ResultInsert = createInsertSchema(results);
+export type TestInsert = typeof tests.$inferInsert;
 export type TestType = typeof tests.$inferSelect;
 export type SessionInsert = typeof sessions.$inferInsert;
 export type Question = typeof questions.$inferInsert;
