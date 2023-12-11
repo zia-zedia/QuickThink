@@ -267,7 +267,15 @@ export function TestTopBar() {
             handleDraftSaving();
           }}
         >
-          Save Draft
+          {saveDraft.isLoading ? (
+            <div>Saving...</div>
+          ) : saveDraft.isSuccess ? (
+            <div>Saved succesfully ✓</div>
+          ) : saveDraft.isIdle ? (
+            <div>Save Draft</div>
+          ) : (
+            <div>Save Draft</div>
+          )}
         </button>
         <div className="flex flex-row gap-5">
           <button className="">Delete Test</button>
@@ -284,15 +292,10 @@ export function QuestionsSection() {
     return null;
   }
   const { testStates, setTestStates } = useContext(TeacherPageContext);
+  const { isError, isLoading, data, error, isSuccess, isRefetching } =
+    api.tests.getTestDataWithId.useQuery({ test_id: testId });
 
-  const {
-    isError,
-    isLoading,
-    data,
-    error,
-    isSuccess,
-    isRefetching,
-  } = api.tests.getTestDataWithId.useQuery({ test_id: testId });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (isSuccess && !isRefetching) {
@@ -302,7 +305,9 @@ export function QuestionsSection() {
         }
         return {
           ...state,
-          state: data,
+          state: data.sort(
+            (a, b) => a.question.sequence! - b.question.sequence!,
+          ),
         };
       });
       setTestStates(newStateArray);
@@ -468,9 +473,58 @@ export function Question(props: {
 }) {
   const question = props.question;
   const index = props.index;
+  const { currentTestId, testStates, setTestStates } =
+    useContext(TeacherPageContext);
   const [title, setTitle] = useState(question.content!);
+  const [grade, setGrade] = useState(question.grade!);
   const [isEditing, setIsEditing] = useState(false);
-  const inputRef = useRef(null);
+  const titleInputRef = useRef(null);
+  const gradeInputRef = useRef(null);
+
+  useEffect(() => {
+    const newTestStates = testStates.map((state) => {
+      if (state.testId === currentTestId) {
+        return {
+          ...state,
+          state: [...state.state].map((QnA) => {
+            if (QnA.question.id === question.id!) {
+              return {
+                ...QnA,
+                question: {
+                  ...question,
+                  content: title,
+                },
+              };
+            }
+            return QnA;
+          }),
+        };
+      }
+      return state;
+    });
+    setTestStates(newTestStates);
+  }, [title]);
+
+  useEffect(() => {
+    const newTestStates = testStates.map((state) => {
+      if (state.testId === currentTestId) {
+        return {
+          ...state,
+          state: [...state.state].map((QnA) => {
+            if (QnA.question.id === question.id!) {
+              return {
+                ...QnA,
+                question: { ...question, grade: grade },
+              };
+            }
+            return QnA;
+          }),
+        };
+      }
+      return state;
+    });
+    setTestStates(newTestStates);
+  }, [grade]);
 
   return (
     <Draggable
@@ -487,39 +541,38 @@ export function Question(props: {
             {...provided.dragHandleProps}
           >
             <div className="flex w-full flex-row justify-between ">
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(event) => {
-                    setTitle(event.target.value);
-                  }}
-                  onBlur={() => {
-                    setIsEditing(false);
-                    if (title === "") {
-                      setTitle(question.content!);
-                    }
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      inputRef.current.blur();
-                    }
-                  }}
-                  ref={inputRef}
-                  autoFocus={true}
-                  className="w-full bg-[#CADBFF] text-[#1A2643] outline-none "
-                />
-              ) : (
-                <h1
-                  className="text-lg font-bold"
-                  onClick={() => {
-                    setIsEditing(true);
-                  }}
-                >
-                  {title}
-                </h1>
-              )}
-              <div className="flex flex-row gap-3">
+              <textarea
+                defaultValue={title}
+                value={title}
+                onChange={(event) => {
+                  setTitle(event.target.value);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    titleInputRef.current.blur();
+                  }
+                }}
+                ref={titleInputRef}
+                className="w-full resize-none overflow-x-hidden overflow-y-clip bg-[#CADBFF] font-bold text-[#1A2643] outline-none"
+              />
+              <div className="flex flex-row items-center gap-3">
+                <p className="flex flex-row">
+                  Grade:{" "}
+                  <input
+                    type="number"
+                    value={question.grade}
+                    ref={gradeInputRef}
+                    onChange={(event) => {
+                      setGrade(Number(event.target.value));
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        gradeInputRef.current.blur();
+                      }
+                    }}
+                    className="w-[50px] bg-[#CADBFF] font-bold text-[#1A2643] outline-none"
+                  />
+                </p>
                 <button
                   className="text-lg"
                   onClick={() => {
@@ -546,13 +599,99 @@ export function Question(props: {
 
 export function Answer(props: { answer: AnswerType }) {
   const { answer } = props;
+  const { currentTestId, testStates, setTestStates } =
+    useContext(TeacherPageContext);
   const [isCorrect, setIsCorrect] = useState(answer.isCorrect);
+  const [content, setContent] = useState(answer.content);
   const [ddlOpen, setDDLOpen] = useState(false);
+  const answerRef = useRef(null);
+
+  useEffect(() => {
+    const newTestStates = testStates.map((state) => {
+      if (state.testId === currentTestId) {
+        return {
+          ...state,
+          state: [...state.state].map((QnA) => {
+            if (QnA.question.id === answer.questionId!) {
+              return {
+                ...QnA,
+                answers: [...QnA.answers].map((answerState) => {
+                  if (answerState.id === answer.id) {
+                    return {
+                      ...answerState,
+                      isCorrect: isCorrect,
+                    };
+                  }
+                  return answerState;
+                }),
+              };
+            }
+            return QnA;
+          }),
+        };
+      }
+      return state;
+    });
+    setTestStates(newTestStates);
+  }, [isCorrect]);
+
+  useEffect(() => {
+    const newTestStates = testStates.map((state) => {
+      if (state.testId === currentTestId) {
+        return {
+          ...state,
+          state: [...state.state].map((QnA) => {
+            if (QnA.question.id === answer.questionId!) {
+              return {
+                ...QnA,
+                answers: [...QnA.answers].map((answerState) => {
+                  if (answerState.id === answer.id) {
+                    return {
+                      ...answerState,
+                      content: content!,
+                    };
+                  }
+                  return answerState;
+                }),
+              };
+            }
+            return QnA;
+          }),
+        };
+      }
+      return state;
+    });
+    setTestStates(newTestStates);
+  }, [content]);
+
+  function deleteAnswer(questionId: number, answerId: number) {
+    console.log("removingId" + answerId);
+    const newTestStates = testStates.map((state) => {
+      if (state.testId === currentTestId) {
+        return {
+          ...state,
+          state: [...state.state].map((QnA) => {
+            if (QnA.question.id === questionId) {
+              return {
+                ...QnA,
+                answers: [...QnA.answers].filter((answer) => {
+                  answer.id === answerId;
+                }),
+              };
+            }
+            return QnA;
+          }),
+        };
+      }
+      return state;
+    });
+    setTestStates(newTestStates);
+  }
 
   return (
     <div className="w-full rounded bg-white p-3">
-      <div className="flex flex-row justify-between">
-        <div className="flex flex-row gap-3">
+      <div className="flex flex-row items-center justify-between">
+        <div className="flex w-full flex-row items-center gap-3">
           {isCorrect ? (
             <div className="h-7 w-7 ">
               <img
@@ -578,7 +717,20 @@ export function Answer(props: { answer: AnswerType }) {
               />
             </div>
           )}
-          <h1 className="text-black">{answer.content}</h1>
+          <input
+            type="text"
+            value={content!}
+            onChange={(event) => {
+              setContent(event.target.value);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                answerRef.current.blur();
+              }
+            }}
+            ref={answerRef}
+            className="w-full bg-none text-[#1A2643] outline-none"
+          />
         </div>
         <div className="relative inline-block">
           <div className="">

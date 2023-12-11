@@ -64,7 +64,7 @@ export const questions = pgTable("questions", {
   testId: uuid("test_id").references(() => tests.id),
   grade: integer("grade").notNull().default(1),
   sequence: integer("sequence"),
-  answerAmount: integer("answer_amount"),
+  answerAmount: integer("answer_amount").default(1),
 });
 
 export const answers = pgTable("answers", {
