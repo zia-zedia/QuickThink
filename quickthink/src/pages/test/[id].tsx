@@ -11,7 +11,7 @@ import {
 
 export function TestPageLayout(props: { children: ReactNode }) {
   return (
-    <div className="flex h-screen flex-col items-center bg-[#EDF0FF]">
+    <div className="flex h-full flex-col items-center bg-[#EDF0FF]">
       {props.children}
     </div>
   );
