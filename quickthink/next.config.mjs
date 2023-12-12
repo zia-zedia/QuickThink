@@ -8,7 +8,6 @@ await import("./src/env.mjs");
 const config = {
   reactStrictMode: false,
   distDir: "dist",
-  output: "export",
   eslint: {
     ignoreDuringBuilds: true,
   },

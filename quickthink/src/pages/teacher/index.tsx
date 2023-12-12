@@ -486,8 +486,8 @@ export function Question(props: {
   const [title, setTitle] = useState(question.content!);
   const [grade, setGrade] = useState(question.grade!);
   const [isEditing, setIsEditing] = useState(false);
-  const titleInputRef = useRef(null);
-  const gradeInputRef = useRef(null);
+  const titleInputRef = useRef();
+  const gradeInputRef = useRef();
 
   useEffect(() => {
     const newTestStates = testStates.map((state) => {
