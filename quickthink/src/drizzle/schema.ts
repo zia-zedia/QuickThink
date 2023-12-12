@@ -119,6 +119,9 @@ export const ZodQuestion = createSelectSchema(questions);
 export const ZodAnswer = createSelectSchema(answers);
 export const ZodInsertQuestion = createInsertSchema(questions);
 export const ZodInsertAnswer = createInsertSchema(answers);
+export const ZodResultSubmission = createInsertSchema(answers).omit({
+  isCorrect: true,
+});
 export const ResultInsert = createInsertSchema(results);
 export type TestInsert = typeof tests.$inferInsert;
 export type TestType = typeof tests.$inferSelect;

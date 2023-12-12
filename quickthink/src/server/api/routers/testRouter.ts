@@ -17,6 +17,7 @@ import {
   results,
   TestType,
   AnswerType,
+  ZodResultSubmission,
 } from "~/drizzle/schema";
 import {
   authenticatedProcedure,
@@ -183,13 +184,19 @@ export const testRouter = createTRPCRouter({
         TestAnswers: z.array(
           z.object({
             question: ZodQuestion,
-            answers: z.array(ZodAnswer),
+            answers: z.array(ZodResultSubmission),
           }),
         ),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const grade = GradeTest(input.TestAnswers);
+      console.log(input.testId);
+      input.TestAnswers.map((QnA) => {
+        console.log(QnA.question.content);
+        QnA.answers.map((answer) => {
+          console.log(answer.content);
+        });
+      });
     }),
 });
 

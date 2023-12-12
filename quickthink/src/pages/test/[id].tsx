@@ -93,20 +93,20 @@ export function TestPage() {
   return (
     <>
       <div
-        className={`flex h-full w-full justify-center ${
-          testStarted ? "" : "items-center "
-        }`}
+        className={`${
+          testStarted
+            ? "flex h-full flex-col"
+            : "flex h-screen flex-col justify-center"
+        } w-full max-w-3xl`}
       >
-        <div className="w-full max-w-3xl">
-          <TestStartModal
-            test_id={test_id}
-            testStarted={testStarted}
-            startOnClick={HandleTestStart}
-            leaveOnClick={HandleLeaveTest}
-            timeLeft={timeLeft ? timeLeft : data?.timer}
-          />
-          {testStarted ? <Test testId={test_id} /> : null}
-        </div>
+        <TestStartModal
+          test_id={test_id}
+          testStarted={testStarted}
+          startOnClick={HandleTestStart}
+          leaveOnClick={HandleLeaveTest}
+          timeLeft={timeLeft ? timeLeft : data?.timer}
+        />
+        {testStarted ? <Test testId={test_id} /> : null}
       </div>
     </>
   );
@@ -284,9 +284,10 @@ export function Test(props: { testId: string }) {
 
   function HandleSubmit() {
     console.log("submitting");
-    if (testingAnswers.length < data!.length) {
+    if (testAnswers.length < data!.length) {
       return;
     }
+
     console.log(testAnswers);
     const submittableTestAnswers = submitTest.mutate({
       testId: props.testId,
