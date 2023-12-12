@@ -1,4 +1,4 @@
-import { Head } from "next/document";
+import Head from "next/head";
 import { ReactNode } from "react";
 
 export function DashboardLayout(props: { children: ReactNode }) {
@@ -10,16 +10,6 @@ export function DashboardLayout(props: { children: ReactNode }) {
 }
 export default function StudentLayout() {
   return (
-    <DashboardLayout>
-      <StudentIndex>
-        <StudentDashboard />
-      </StudentIndex>
-    </DashboardLayout>
-  );
-}
-
-export function StudentIndex(props: { children: ReactNode }) {
-  return (
     <>
       <Head>
         <title>Multiple Choice Test</title>
@@ -29,9 +19,17 @@ export function StudentIndex(props: { children: ReactNode }) {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      {props.children}
+      <DashboardLayout>
+        <StudentIndex>
+          <StudentDashboard />
+        </StudentIndex>
+      </DashboardLayout>
     </>
   );
+}
+
+export function StudentIndex(props: { children: ReactNode }) {
+  return <>{props.children}</>;
 }
 
 export function StudentDashboard() {
