@@ -51,7 +51,7 @@ export function AllTests() {
                         {test.difficulty}
                       </div>
                     </div>
-                    <div className="w-full rounded px-2 text-[#849EFA] outline outline-1 outline-[#849EFA] hover:bg-[#849EFA] hover:text-white">
+                    <div className="my-2 flex w-full items-center justify-center rounded px-2 text-[#849EFA] outline outline-1 outline-[#849EFA] hover:bg-[#849EFA] hover:text-white">
                       <Link href={`/test/${test.id}`}>Start test</Link>
                     </div>
                   </Card>
