@@ -12,7 +12,6 @@ export function StudentIndex() {
   return (
     <div className="flex h-screen flex-col items-center bg-[#EDF0FF]">
       <AllTests />
-      <Courses />
     </div>
   );
 }
@@ -51,6 +50,9 @@ export function AllTests() {
                       <div className="rounded bg-[#849EFA] p-2 text-xs text-white">
                         {test.difficulty}
                       </div>
+                    </div>
+                    <div className="w-full rounded px-2 text-[#849EFA] outline outline-1 outline-[#849EFA] hover:bg-[#849EFA] hover:text-white">
+                      <Link href={`/test/${test.id}`}>Start test</Link>
                     </div>
                   </Card>
                 );
