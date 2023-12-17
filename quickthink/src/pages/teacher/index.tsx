@@ -17,7 +17,15 @@ import { api } from "~/utils/api";
 import { CardContainer } from "..";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 
-export const TeacherPageContext = createContext<TeacherPageContextData>();
+const defaultContext: TeacherPageContextData = {
+  currentTestId: "",
+  setCurrentTestId: () => {},
+  testStates: [],
+  setTestStates: () => {},
+};
+
+export const TeacherPageContext =
+  createContext<TeacherPageContextData>(defaultContext);
 
 export default function TeacherLayout() {
   const [currentTestId, setCurrentTestId] = useState("");

@@ -11,7 +11,7 @@ import {
 
 export function TestPageLayout(props: { children: ReactNode }) {
   return (
-    <div className="flex h-screen flex-col items-center bg-[#EDF0FF]">
+    <div className="flex h-full flex-col items-center bg-[#EDF0FF]">
       {props.children}
     </div>
   );
@@ -93,20 +93,20 @@ export function TestPage() {
   return (
     <>
       <div
-        className={`flex h-full w-full justify-center ${
-          testStarted ? "" : "items-center "
-        }`}
+        className={`${
+          testStarted
+            ? "flex h-full flex-col"
+            : "flex h-screen flex-col justify-center"
+        } w-full max-w-3xl`}
       >
-        <div className="w-full max-w-3xl">
-          <TestStartModal
-            test_id={test_id}
-            testStarted={testStarted}
-            startOnClick={HandleTestStart}
-            leaveOnClick={HandleLeaveTest}
-            timeLeft={timeLeft ? timeLeft : data?.timer}
-          />
-          {testStarted ? <Test testId={test_id} /> : null}
-        </div>
+        <TestStartModal
+          test_id={test_id}
+          testStarted={testStarted}
+          startOnClick={HandleTestStart}
+          leaveOnClick={HandleLeaveTest}
+          timeLeft={timeLeft ? timeLeft : data?.timer}
+        />
+        {testStarted ? <Test testId={test_id} /> : null}
       </div>
     </>
   );

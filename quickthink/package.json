@@ -12,7 +12,7 @@
     "db:pull": "dotenv drizzle-kit introspect:pg --config='authpull.config.ts'",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start -H 0.0.0.0"
   },
   "dependencies": {
     "@planetscale/database": "^1.11.0",
