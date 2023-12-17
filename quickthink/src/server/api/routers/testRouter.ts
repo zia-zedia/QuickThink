@@ -13,13 +13,9 @@ import {
   results,
   TestType,
   AnswerType,
-<<<<<<< HEAD
   ZodResultInsert,
   ZodAnswerSubmit,
   ResultInsert,
-=======
-  ZodResultSubmission,
->>>>>>> 31ce5094eeef469d19cd9789d5f4e2dd98796676
 } from "~/drizzle/schema";
 import {
   authenticatedProcedure,
@@ -198,17 +194,12 @@ export const testRouter = createTRPCRouter({
         TestAnswers: z.array(
           z.object({
             question: ZodQuestion,
-<<<<<<< HEAD
             answers: z.array(ZodAnswerSubmit),
-=======
-            answers: z.array(ZodResultSubmission),
->>>>>>> 31ce5094eeef469d19cd9789d5f4e2dd98796676
           }),
         ),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-<<<<<<< HEAD
       const db = ctx.db;
       let totalGrade = input.TestAnswers.reduce((acc, QnA) => {
         return acc + QnA.question.grade;
@@ -241,18 +232,7 @@ export const testRouter = createTRPCRouter({
           .insert(results)
           .values(finalResult)
           .returning();
-        console.log(newResult[0]?.id);
-        console.log(newResult[0]?.grade);
       });
-=======
-      console.log(input.testId);
-      input.TestAnswers.map((QnA) => {
-        console.log(QnA.question.content);
-        QnA.answers.map((answer) => {
-          console.log(answer.content);
-        });
-      });
->>>>>>> 31ce5094eeef469d19cd9789d5f4e2dd98796676
     }),
 });
 
