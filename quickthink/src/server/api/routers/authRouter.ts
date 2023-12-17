@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { UserInsert, users } from "~/drizzle/schema";
+import { eq } from "drizzle-orm";
 
 export const registrationSchema = z.object({
   email: z.string().email(),
@@ -13,15 +14,24 @@ export const authRouter = createTRPCRouter({
     .input(z.object({ email: z.string().email(), password: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const supabase = ctx.supabase;
+      const db = ctx.db;
       const { data, error } = await supabase.auth.signInWithPassword({
         email: input.email,
         password: input.password,
       });
       console.log(data);
-      if (data.user != null && data.session != null) {
-        return { user: data.user, session: data.session };
+      if (!error) {
+        const user = await db
+          .select()
+          .from(users)
+          .where(eq(users.authId, data.user.id));
+        return { user: user[0], session: data.session };
       }
-      throw new TRPCError({ code: "NOT_FOUND" });
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        cause: error.cause,
+        message: error.message,
+      });
     }),
   signUp: publicProcedure
     .input(

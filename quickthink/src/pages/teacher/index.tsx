@@ -23,18 +23,6 @@ export default function TeacherLayout() {
   const [currentTestId, setCurrentTestId] = useState("");
   const [testStates, setTestStates] = useState<Array<TestState>>([]);
 
-  useEffect(() => {
-    /*
-    testStates.map((values) => {
-      console.log(values.testId);
-      values.state.map((state) => {
-        console.log("yeah");
-        console.log(state.question.content);
-      });
-    });
-  */
-  }, [testStates]);
-
   return (
     <>
       <TeacherPageContext.Provider
@@ -294,8 +282,7 @@ export function QuestionsSection() {
   const { testStates, setTestStates } = useContext(TeacherPageContext);
   const { isError, isLoading, data, error, isSuccess, isRefetching } =
     api.tests.getTestDataWithId.useQuery({ test_id: testId });
-
-  const [isDeleting, setIsDeleting] = useState(false);
+  const questionDelete = api.teacher.deleteQuestion.useMutation();
 
   useEffect(() => {
     if (isSuccess && !isRefetching) {
@@ -355,8 +342,7 @@ export function QuestionsSection() {
     setTestStates(newTestStates);
   }
 
-  function deleteQuestion(questionId: number) {
-    console.log(questionId);
+  async function deleteQuestion(questionId: number) {
     const newTestStates = testStates.map((state) => {
       if (state.testId === testId) {
         return {
@@ -368,6 +354,9 @@ export function QuestionsSection() {
       }
       return state;
     });
+    if (questionId >= 1) {
+      questionDelete.mutate({ questionId: questionId });
+    }
     setTestStates(newTestStates);
   }
 
@@ -451,7 +440,7 @@ export function AnswerSection(props: {
   return (
     <div className="flex w-full flex-row flex-wrap gap-y-4 ">
       {answers.map((answer) => {
-        return <Answer answer={answer} />;
+        return <Answer key={answer.id} answer={answer} />;
       })}
       <button
         className="w-full rounded-lg bg-white p-2 text-center text-blue-500 outline outline-1 outline-blue-200"
@@ -477,7 +466,7 @@ export function Question(props: {
     useContext(TeacherPageContext);
   const [title, setTitle] = useState(question.content!);
   const [grade, setGrade] = useState(question.grade!);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const titleInputRef = useRef(null);
   const gradeInputRef = useRef(null);
 
@@ -540,54 +529,78 @@ export function Question(props: {
             {...provided.draggableProps}
             {...provided.dragHandleProps}
           >
-            <div className="flex w-full flex-row justify-between ">
-              <textarea
-                defaultValue={title}
-                value={title}
-                onChange={(event) => {
-                  setTitle(event.target.value);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    titleInputRef.current.blur();
-                  }
-                }}
-                ref={titleInputRef}
-                className="w-full resize-none overflow-x-hidden overflow-y-clip bg-[#CADBFF] font-bold text-[#1A2643] outline-none"
-              />
-              <div className="flex flex-row items-center gap-3">
-                <p className="flex flex-row">
-                  Grade:{" "}
-                  <input
-                    type="number"
-                    value={question.grade}
-                    ref={gradeInputRef}
-                    onChange={(event) => {
-                      setGrade(Number(event.target.value));
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        gradeInputRef.current.blur();
-                      }
-                    }}
-                    className="w-[50px] bg-[#CADBFF] font-bold text-[#1A2643] outline-none"
-                  />
-                </p>
-                <button
-                  className="text-lg"
-                  onClick={() => {
-                    props.handleDelete(question.id!);
+            <div className="flex w-full flex-col gap-2">
+              <div className="flex w-full flex-row justify-between ">
+                <textarea
+                  defaultValue={title}
+                  value={title}
+                  onChange={(event) => {
+                    setTitle(event.target.value);
                   }}
-                >
-                  <div className="h-7 w-7">
-                    <img
-                      src={"/trash_icon.svg"}
-                      alt="Delete"
-                      className="fill-[#1A2643] object-contain"
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      titleInputRef.current.blur();
+                    }
+                  }}
+                  rows={1}
+                  ref={titleInputRef}
+                  className="h-auto w-full resize-none overflow-x-hidden overflow-y-clip bg-[#CADBFF] font-bold text-[#1A2643] outline-none"
+                />
+                <div className="flex flex-row items-center gap-3">
+                  <p className="flex flex-row">
+                    Grade:{" "}
+                    <input
+                      type="number"
+                      value={question.grade}
+                      ref={gradeInputRef}
+                      onChange={(event) => {
+                        setGrade(Number(event.target.value));
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          gradeInputRef.current.blur();
+                        }
+                      }}
+                      className="w-[50px] bg-[#CADBFF] font-bold text-[#1A2643] outline-none"
                     />
-                  </div>
-                </button>
+                  </p>
+                  <button className="text-lg">
+                    <div className="h-7 w-7">
+                      <img
+                        src={"/trash_icon.svg"}
+                        alt="Delete"
+                        className="fill-[#1A2643] object-contain"
+                        onClick={() => {
+                          setIsDeleting(!isDeleting);
+                        }}
+                      />
+                    </div>
+                  </button>
+                </div>
               </div>
+              {isDeleting ? (
+                <div className="flex w-full flex-row justify-between">
+                  <p>Are you sure you want to delete this question?</p>
+                  <section className="flex flex-row justify-between gap-3">
+                    <button
+                      className="hover: rounded-lg bg-[#d47979] px-4 py-1 text-white transition-all hover:bg-[#bb4343]"
+                      onClick={() => {
+                        props.handleDelete(question.id!);
+                      }}
+                    >
+                      Yes
+                    </button>
+                    <button
+                      className="rounded-lg bg-white px-4 py-1 text-[#1A2643] transition-all hover:bg-gray-200"
+                      onClick={() => {
+                        setIsDeleting(false);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </section>
+                </div>
+              ) : null}
             </div>
             {props.children}
           </div>
@@ -605,6 +618,8 @@ export function Answer(props: { answer: AnswerType }) {
   const [content, setContent] = useState(answer.content);
   const [ddlOpen, setDDLOpen] = useState(false);
   const answerRef = useRef(null);
+
+  const answerDelete = api.teacher.deleteAnswer.useMutation();
 
   useEffect(() => {
     const newTestStates = testStates.map((state) => {
@@ -665,26 +680,31 @@ export function Answer(props: { answer: AnswerType }) {
   }, [content]);
 
   function deleteAnswer(questionId: number, answerId: number) {
-    console.log("removingId" + answerId);
+    console.log("removingId " + questionId + " " + answerId);
     const newTestStates = testStates.map((state) => {
       if (state.testId === currentTestId) {
         return {
           ...state,
           state: [...state.state].map((QnA) => {
             if (QnA.question.id === questionId) {
+              console.log("hi");
               return {
                 ...QnA,
-                answers: [...QnA.answers].filter((answer) => {
-                  answer.id === answerId;
+                answers: [...QnA.answers!].filter((answer) => {
+                  return answer.id !== answerId;
                 }),
               };
             }
+            console.log("hello");
             return QnA;
           }),
         };
       }
       return state;
     });
+    if (answerId >= 0) {
+      answerDelete.mutate({ answerId: answerId });
+    }
     setTestStates(newTestStates);
   }
 
@@ -760,6 +780,9 @@ export function Answer(props: { answer: AnswerType }) {
                 <button
                   className="w-full rounded px-4 py-2 text-sm text-[#1A2643] transition-all hover:bg-gray-300 hover:text-white"
                   id="menu-item-1"
+                  onClick={() => {
+                    deleteAnswer(props.answer.questionId, props.answer.id!);
+                  }}
                 >
                   Delete
                 </button>

@@ -1,7 +1,9 @@
-import { useState } from "react"
+import { ReactNode, useState } from "react";
 
-export default function Navbar(props: { isOpened: boolean }) {
-	const [opened, setOpened] = useState(props.isOpened)
+export function Navbar(props: { children: ReactNode }) {
+  return (
+    <div className="fixed left-0 top-0 h-screen w-[10%] max-w-[100px] bg-[#1A2643]">
+      {props.children}
+    </div>
+  );
 }
-
-

@@ -3,16 +3,26 @@ import { ReactNode } from "react";
 import { TestType as Test } from "~/drizzle/schema";
 import { api } from "~/utils/api";
 import { Card, CardContainer, Section } from "..";
+import { Navbar } from "~/components/Navbar";
 
-export default function StudentLayout() {
-  return <StudentIndex />;
+export default function StudentLayout(props: { children: ReactNode }) {
+  return (
+    <>
+      <Navbar>something</Navbar>
+      <div className="ml-[10%]">
+        <StudentIndex />
+      </div>
+    </>
+  );
 }
 
 export function StudentIndex() {
   return (
-    <div className="flex h-screen flex-col items-center bg-[#EDF0FF]">
-      <AllTests />
-      <Courses />
+    <div>
+      <div className="flex h-full flex-col items-center bg-[#EDF0FF]">
+        <AllTests />
+        <Courses />
+      </div>
     </div>
   );
 }

@@ -48,7 +48,11 @@ export function LoginForm() {
 
   const loginUser = api.auth.login.useMutation({
     onSuccess: (data) => {
-      window.location.href = "/student";
+      if (data.user?.role === "student") {
+        window.location.href = "/student";
+      } else if (data.user?.role === "teacher") {
+        window.location.href = "/teacher";
+      }
     },
     onError: (error) => {
       setMessage(`Login Failed, ${error.message}`);
@@ -126,7 +130,7 @@ export function LoginForm() {
           Sign up
         </Link>
       </p>
-      {message}
+      <span className="text-red-400">{message}</span>
     </div>
   );
 }

@@ -71,7 +71,10 @@ export const answers = pgTable("answers", {
   id: serial("id").primaryKey().notNull(),
   content: text("content"),
   questionId: integer("question_id")
-    .references(() => questions.id)
+    .references(() => questions.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
     .notNull(),
   isCorrect: boolean("is_correct"),
 });
@@ -119,10 +122,14 @@ export const ZodQuestion = createSelectSchema(questions);
 export const ZodAnswer = createSelectSchema(answers);
 export const ZodInsertQuestion = createInsertSchema(questions);
 export const ZodInsertAnswer = createInsertSchema(answers);
-export const ResultInsert = createInsertSchema(results);
+export const ZodResultInsert = createInsertSchema(results);
+export const ZodAnswerSubmit = createInsertSchema(answers).omit({
+  isCorrect: true,
+});
 export type TestInsert = typeof tests.$inferInsert;
 export type TestType = typeof tests.$inferSelect;
 export type SessionInsert = typeof sessions.$inferInsert;
 export type Question = typeof questions.$inferInsert;
 export type Answer = Omit<typeof answers.$inferInsert, "isCorrect">;
 export type AnswerType = typeof answers.$inferInsert;
+export type ResultInsert = typeof results.$inferInsert;

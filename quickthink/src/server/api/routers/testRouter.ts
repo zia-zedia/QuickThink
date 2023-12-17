@@ -1,8 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { create } from "domain";
 import { and, eq } from "drizzle-orm";
-import test from "node:test";
-import { Input } from "postcss";
 import { z } from "zod";
 import {
   answers,
@@ -13,10 +10,12 @@ import {
   Answer,
   ZodQuestion,
   ZodAnswer,
-  ResultInsert,
   results,
   TestType,
   AnswerType,
+  ZodResultInsert,
+  ZodAnswerSubmit,
+  ResultInsert,
 } from "~/drizzle/schema";
 import {
   authenticatedProcedure,
@@ -25,7 +24,7 @@ import {
 } from "~/server/api/trpc";
 
 export const testRouter = createTRPCRouter({
-  getTestDataWithId: publicProcedure
+  getTestDataForTest: publicProcedure
     .input(z.object({ test_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       const db = ctx.db;
@@ -62,30 +61,42 @@ export const testRouter = createTRPCRouter({
 
       return testQuestions;
     }),
-  getTestQuestions: publicProcedure
+  getTestDataWithId: publicProcedure
     .input(z.object({ test_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       const db = ctx.db;
-      const testQuestions = await db
-        .select()
-        .from(questions)
-        .where(eq(questions.testId, input.test_id));
-      return { questions: testQuestions };
-    }),
-  getQuestionAnswers: publicProcedure
-    .input(z.object({ question_id: z.number() }))
-    .query(async ({ ctx, input }) => {
-      const db = ctx.db;
-      const questionAnswers = await db
+      const testQuery = await db
         .select({
-          id: answers.id,
-          questionId: answers.questionId,
-          content: answers.content,
+          question: questions,
+          answers: {
+            id: answers.id,
+            content: answers.content,
+            questionId: answers.questionId,
+            isCorrect: answers.isCorrect,
+          },
         })
-        .from(answers)
-        .where(eq(answers.questionId, input.question_id));
+        .from(questions)
+        .leftJoin(answers, eq(answers.questionId, questions.id))
+        .where(eq(questions.testId, input.test_id));
 
-      return { answers: questionAnswers };
+      const testQuestions = Object.values(
+        testQuery.reduce<
+          Record<number, { question: Question; answers: Answer[] }>
+        >((acc, row) => {
+          const question = row.question;
+          const answers = row.answers;
+
+          if (!acc[question.id]) {
+            acc[question.id] = { question, answers: [] };
+          }
+          if (answers) {
+            acc[question.id]?.answers.push(answers);
+          }
+          return acc;
+        }, {}),
+      );
+
+      return testQuestions;
     }),
   getTestIntroWithId: publicProcedure
     .input(z.object({ test_id: z.string().uuid() }))
@@ -183,13 +194,47 @@ export const testRouter = createTRPCRouter({
         TestAnswers: z.array(
           z.object({
             question: ZodQuestion,
-            answers: z.array(ZodAnswer),
+            answers: z.array(ZodAnswerSubmit),
           }),
         ),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const grade = GradeTest(input.TestAnswers);
+      const db = ctx.db;
+      let totalGrade = input.TestAnswers.reduce((acc, QnA) => {
+        return acc + QnA.question.grade;
+      }, 0);
+      let finalGrade = 0;
+      const calculateAnswer = input.TestAnswers.map(async (QnA) => {
+        const correctAnswers = await db
+          .select({ id: answers.id, isCorrect: answers.isCorrect })
+          .from(answers)
+          .where(
+            and(
+              eq(answers.questionId, QnA.question.id),
+              eq(answers.isCorrect, true),
+            ),
+          );
+        QnA.answers.map((answer) => {
+          correctAnswers.map((correctAnswer) => {
+            if (correctAnswer.id === answer.id) {
+              finalGrade += QnA.question.grade;
+            }
+          });
+        });
+      });
+      Promise.all(calculateAnswer).then(async () => {
+        const finalResult: ResultInsert = {
+          testId: input.testId,
+          grade: finalGrade / totalGrade,
+        };
+        const newResult = await db
+          .insert(results)
+          .values(finalResult)
+          .returning();
+        console.log(newResult[0]?.id);
+        console.log(newResult[0]?.grade);
+      });
     }),
 });
 

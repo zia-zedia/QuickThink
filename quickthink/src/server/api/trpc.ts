@@ -45,9 +45,11 @@ const isAuthenticated = middleware(async (_opts) => {
     .select()
     .from(users)
     .where(eq(users.authId, authUser.data.user?.id));
-
+  if (user.length === 0) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
   return _opts.next({
-    ctx: { user: user },
+    ctx: { user: user[0] },
   });
 });
 
@@ -59,19 +61,15 @@ const isTeacher = middleware(async (_opts) => {
     console.log("NO AUTH USER NOPE");
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-
   const user = await db
     .select()
     .from(users)
     .where(eq(users.authId, authUser.data.user?.id));
-
   if (user.length === 0) {
-    console.log("NO USER NOPE");
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-
   return _opts.next({
-    ctx: { user: authUser },
+    ctx: { user: user[0] },
   });
 });
 export const publicProcedure = t.procedure;

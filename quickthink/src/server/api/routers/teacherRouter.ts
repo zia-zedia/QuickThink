@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { number, z } from "zod";
 import {
   createTRPCRouter,
   publicProcedure,
@@ -6,6 +6,8 @@ import {
   teacherProcedure,
 } from "../trpc";
 import {
+  Answer,
+  Question,
   ZodAnswer,
   ZodInsertAnswer,
   ZodInsertQuestion,
@@ -18,6 +20,9 @@ import {
   users,
 } from "~/drizzle/schema";
 import { eq } from "drizzle-orm";
+import test from "node:test";
+import { TRPCError } from "@trpc/server";
+import { db } from "~/server/db";
 
 export const teacherRouter = createTRPCRouter({
   getTestList: publicProcedure.query(async ({ ctx }) => {
@@ -26,6 +31,34 @@ export const teacherRouter = createTRPCRouter({
       .from(tests)
       .leftJoin(users, eq(tests.teacherId, users.id));
   }),
+  deleteQuestion: publicProcedure
+    .input(z.object({ questionId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      /*
+      const user = ctx.user;
+      console.log(user);
+      console.log(user?.role);
+
+      const test = await db
+        .select({ teacherId: tests.teacherId })
+        .from(tests)
+        .leftJoin(questions, eq(questions.testId, tests.id))
+        .where(eq(questions.id, input.questionId));
+
+      if (test.length === 0) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      if (!(test[0]?.teacherId === user?.id)) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+      */
+      await ctx.db.delete(questions).where(eq(questions.id, input.questionId));
+    }),
+  deleteAnswer: publicProcedure
+    .input(z.object({ answerId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await db.delete(answers).where(eq(answers.id, input.answerId));
+    }),
   saveDraft: publicProcedure
     .input(
       z.object({
@@ -49,14 +82,21 @@ export const teacherRouter = createTRPCRouter({
           await db.transaction(async (tx) => {
             await tx
               .update(questions)
-              .set({ content: QnA.question.content, sequence: index })
+              .set({
+                content: QnA.question.content,
+                sequence: index,
+                grade: QnA.question.grade,
+                answerAmount: QnA.answers.reduce((acc, cur) => {
+                  if (cur.isCorrect) {
+                    acc += 1;
+                  }
+                  return acc;
+                }, 0),
+              })
               .where(eq(questions.id, QnA.question.id!));
 
             QnA.answers.map(async (answer) => {
               if (answer.id! >= 1) {
-                console.log("updating answer");
-                console.log(answer.id!);
-                console.log(answer.content);
                 await tx
                   .update(answers)
                   .set({

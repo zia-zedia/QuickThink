@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
-import { Answer, Question, TestType } from "~/drizzle/schema";
+import { Answer, Question, TestType, questions } from "~/drizzle/schema";
 import {
   ReactNode,
   useEffect,
@@ -226,7 +226,7 @@ export function Test(props: { testId: string }) {
   >([]);
   const [completed, setCompleted] = useState(false);
   const { isLoading, isError, data, error } =
-    api.tests.getTestDataWithId.useQuery({
+    api.tests.getTestDataForTest.useQuery({
       test_id: props.testId!,
     });
   const submitTest = api.tests.submitTest.useMutation();
@@ -284,14 +284,20 @@ export function Test(props: { testId: string }) {
 
   function HandleSubmit() {
     console.log("submitting");
-    if (testingAnswers.length < data!.length) {
+    if (testAnswers.length < data!.length) {
       return;
     }
-    console.log(testAnswers);
-    const submittableTestAnswers = submitTest.mutate({
-      testId: props.testId,
-      TestAnswers: testAnswers!,
+    const insertValues = testAnswers.map((value) => {
+      const insertAnswers = value.answers.map((answer) => {
+        return { ...answer, id: answer.id };
+      });
+      return {
+        ...value,
+        question: { ...value.question, id: value.question.id },
+        answers: insertAnswers,
+      };
     });
+    submitTest.mutate({ testId: props.testId, TestAnswers: insertValues! });
   }
 
   return (
@@ -339,7 +345,19 @@ export function QuestionContainer(props: {
 }) {
   return (
     <div className="flex flex-col gap-2 rounded bg-[#CADBFF] p-2 shadow">
-      <h1 className="px-3 py-2 font-bold">{props.question.content}</h1>
+      <div className="flex flex-row justify-between">
+        <h1 className="max-w-[80%] px-3 py-2 font-bold">
+          {props.question.content}
+        </h1>
+        <h1 className="px-3 py-2 font-bold">
+          {props.question.answerAmount}{" "}
+          {props.question.answerAmount === 1 ? (
+            <span>answer</span>
+          ) : (
+            <span>answers</span>
+          )}
+        </h1>
+      </div>
       <div className="">{props.children}</div>
     </div>
   );
