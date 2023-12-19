@@ -16,6 +16,7 @@ import {
 import { api } from "~/utils/api";
 import { CardContainer } from "..";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { Navbar } from "~/components/Navbar";
 
 const defaultContext: TeacherPageContextData = {
   currentTestId: "",
@@ -36,39 +37,42 @@ export default function TeacherLayout() {
       <TeacherPageContext.Provider
         value={{ currentTestId, setCurrentTestId, testStates, setTestStates }}
       >
-        <YourTests>
-          <div className="h-full w-full p-4 lg:max-w-[75%]">
-            <TestSection>
-              <TestTopBar />
-              <DragDropContext
-                onDragEnd={(result, source) => {
-                  if (!result.destination) return;
-                  const test = testStates.filter(
-                    (state) => state.testId === currentTestId,
-                  )[0]?.state!;
-                  const newOrder = reorder(
-                    test,
-                    result.source.index,
-                    result.destination.index,
-                  );
-                  const newTestState = testStates.map((state) => {
-                    if (!(state.testId === currentTestId)) {
-                      return state;
-                    } else {
-                      return {
-                        ...state,
-                        state: newOrder,
-                      };
-                    }
-                  });
-                  setTestStates(newTestState);
-                }}
-              >
-                <QuestionsSection />
-              </DragDropContext>
-            </TestSection>
-          </div>
-        </YourTests>
+        <div className="flex h-screen w-full">
+          <Navbar></Navbar>
+          <YourTests>
+            <div className="p-4 lg:max-w-[75%]">
+              <TestSection>
+                <TestTopBar />
+                <DragDropContext
+                  onDragEnd={(result, source) => {
+                    if (!result.destination) return;
+                    const test = testStates.filter(
+                      (state) => state.testId === currentTestId,
+                    )[0]?.state!;
+                    const newOrder = reorder(
+                      test,
+                      result.source.index,
+                      result.destination.index,
+                    );
+                    const newTestState = testStates.map((state) => {
+                      if (!(state.testId === currentTestId)) {
+                        return state;
+                      } else {
+                        return {
+                          ...state,
+                          state: newOrder,
+                        };
+                      }
+                    });
+                    setTestStates(newTestState);
+                  }}
+                >
+                  <QuestionsSection />
+                </DragDropContext>
+              </TestSection>
+            </div>
+          </YourTests>
+        </div>
       </TeacherPageContext.Provider>
     </>
   );
@@ -106,37 +110,40 @@ export function YourTests(props: { children?: ReactNode }) {
     }
   }, [data]);
 
-  if (isLoading) {
-    return <>Loading...</>;
-  }
-
-  if (isError) {
-    return (
-      <>
-        An error occurred.
-        {error.message}
-      </>
-    );
-  }
   return (
-    <div>
-      <div className="fixed left-0 top-0 h-screen w-[25%] bg-[#EDF0FF]">
-        <div className="p-3">
-          <h1 className="pb-4 text-xl font-bold">Your Tests</h1>
-          <div className="flex flex-col gap-3">
-            {data.map((value) => {
-              return (
-                <TestInfoContainer
-                  key={value.tests.id}
-                  test={value.tests}
-                  selected={value.tests.id === currentTestId}
-                />
-              );
-            })}
-          </div>
+    <div className="flex h-screen w-full border border-black">
+      <div className="sticky h-full w-[25%] bg-[#EDF0FF] p-3">
+        <h1 className="pb-4 text-xl font-bold">Your Tests</h1>
+        <div className="flex flex-col gap-3">
+          {isError ? (
+            <>
+              An error occurred.
+              {error.message}
+            </>
+          ) : (
+            <>
+              {isLoading ? (
+                <>Loading...</>
+              ) : (
+                <>
+                  {data.map((value) => {
+                    return (
+                      <TestInfoContainer
+                        key={value.tests.id}
+                        test={value.tests}
+                        selected={value.tests.id === currentTestId}
+                      />
+                    );
+                  })}
+                </>
+              )}
+            </>
+          )}
         </div>
       </div>
-      <div className="ml-[25%]">{props.children ? props.children : null}</div>
+      <div className="h-full w-full overflow-y-scroll">
+        {props.children ? props.children : null}
+      </div>
     </div>
   );
 }
@@ -194,11 +201,7 @@ export function TestSection(props: { children?: ReactNode }) {
   const testSelected = useContext(TeacherPageContext).currentTestId;
 
   return (
-    <div
-      className={`${
-        testSelected ? "h-full" : "h-screen"
-      } rounded-lg border shadow`}
-    >
+    <div className={`${testSelected ? "rounded-lg border shadow" : ""}`}>
       {props.children}
     </div>
   );

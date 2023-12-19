@@ -7,7 +7,6 @@ await import("./src/env.mjs");
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: false,
-  distDir: "dist",
   eslint: {
     ignoreDuringBuilds: true,
   },
