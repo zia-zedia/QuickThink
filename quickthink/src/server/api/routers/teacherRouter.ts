@@ -25,6 +25,20 @@ import { TRPCError } from "@trpc/server";
 import { db } from "~/server/db";
 
 export const teacherRouter = createTRPCRouter({
+  getCourseDataWithId: publicProcedure
+    .input(z.object({ course_id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const course = await ctx.db
+        .select()
+        .from(courses)
+        .where(eq(courses.id, input.course_id));
+
+      return { course: course[0] };
+    }),
+  getCourses: publicProcedure.query(async ({ ctx }) => {
+    return await ctx.db.select().from(courses);
+    //.where(eq(courses.creatorId, ctx.user?.id!));
+  }),
   getTestList: publicProcedure.query(async ({ ctx }) => {
     return await ctx.db
       .select()

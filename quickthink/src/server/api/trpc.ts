@@ -36,6 +36,7 @@ export const createTRPCRouter = t.router;
 const middleware = t.middleware;
 
 const isAuthenticated = middleware(async (_opts) => {
+  const supabase = _opts.ctx.supabase;
   const authUser = await supabase.auth.getUser();
   console.log(authUser);
   if (authUser.data.user === null) {
@@ -55,7 +56,9 @@ const isAuthenticated = middleware(async (_opts) => {
 
 const isTeacher = middleware(async (_opts) => {
   const db = _opts.ctx.db;
+  const supabase = _opts.ctx.supabase;
   const authUser = await supabase.auth.getUser();
+  console.log(authUser);
 
   if (authUser.data.user === null) {
     console.log("NO AUTH USER NOPE");

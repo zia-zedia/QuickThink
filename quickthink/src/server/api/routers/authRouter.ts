@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import { UserInsert, users } from "~/drizzle/schema";
+import { UserInsert, organization, users } from "~/drizzle/schema";
 import { eq } from "drizzle-orm";
 
 export const registrationSchema = z.object({
@@ -38,6 +38,7 @@ export const authRouter = createTRPCRouter({
       z.object({
         authData: registrationSchema,
         userData: UserInsert.pick({
+          userName: true,
           firstName: true,
           lastName: true,
           role: true,
@@ -55,11 +56,12 @@ export const authRouter = createTRPCRouter({
       console.log(data);
       console.log(error);
       if (data.user == null) {
-        throw new TRPCError({ code: "NOT_FOUND" });
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
       const newUser = await db
         .insert(users)
         .values({
+          userName: input.userData.userName,
           firstName: input.userData.firstName,
           lastName: input.userData.lastName,
           role: input.userData.role,
@@ -67,7 +69,17 @@ export const authRouter = createTRPCRouter({
         })
         .onConflictDoNothing()
         .returning();
-      console.log(newUser);
+
+      if (newUser[0]?.role === "teacher") {
+        await ctx.db
+          .insert(organization)
+          .values({
+            name: `${newUser[0].userName}'s organization`,
+            creatorId: newUser[0].id,
+          });
+      }
+
+      return { user: newUser[0] };
     }),
   isLoggedIn: publicProcedure.query(async ({ ctx }) => {
     const supabase = ctx.supabase;

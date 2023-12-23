@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import {
   pgTable,
   pgEnum,
@@ -11,12 +12,14 @@ import {
   real,
   primaryKey,
   interval,
+  varchar,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const organization = pgTable("organization", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   name: text("name"),
+  creatorId: uuid("user_id").references(() => users.id),
 });
 
 export const roleEnum = pgEnum("roles", ["student", "teacher", "admin"]);
@@ -24,6 +27,7 @@ export const users = pgTable(
   "users",
   {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userName: varchar("user_name", { length: 15 }).unique().notNull(),
     firstName: text("first_name").notNull(),
     lastName: text("last_name").notNull(),
     role: roleEnum("roles"),
@@ -38,10 +42,9 @@ export const users = pgTable(
 
 export const difficultyEnum = pgEnum("difficulty", ["EASY", "MED", "HARD"]);
 export const visibilityEnum = pgEnum("visibility", [
-  "public",
-  "private",
-  "organization",
   "draft",
+  "public",
+  "organization",
 ]);
 
 export const tests = pgTable("tests", {
@@ -91,12 +94,18 @@ export const results = pgTable("results", {
 export const sessions = pgTable("sessions", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   testId: uuid("test_id").references(() => tests.id),
+  userId: uuid("user_id").references(() => users.id),
   startTime: timestamp("start_time").defaultNow(),
 });
 
 export const user_org = pgTable("user_organization", {
-  userId: uuid("user_id"),
-  organizationId: uuid("organization_id"),
+  id: serial("id").primaryKey().notNull(),
+  userId: uuid("user_id")
+    .references(() => users.id)
+    .notNull(),
+  organizationId: uuid("organization_id")
+    .references(() => organization.id)
+    .notNull(),
 });
 
 export const user_courses = pgTable("user_courses", {
@@ -111,6 +120,8 @@ export const user_courses = pgTable("user_courses", {
 
 export const courses = pgTable("courses", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
+  creatorId: uuid("user_id").references(() => users.id),
+  organzationId: uuid("organization_id").references(() => organization.id),
   name: text("course_name").notNull(),
   description: text("description"),
 });
@@ -133,3 +144,4 @@ export type Question = typeof questions.$inferInsert;
 export type Answer = Omit<typeof answers.$inferInsert, "isCorrect">;
 export type AnswerType = typeof answers.$inferInsert;
 export type ResultInsert = typeof results.$inferInsert;
+export type CourseType = typeof courses.$inferSelect;

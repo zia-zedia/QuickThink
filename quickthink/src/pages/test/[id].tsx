@@ -11,8 +11,8 @@ import {
 
 export function TestPageLayout(props: { children: ReactNode }) {
   return (
-    <div className="flex h-full flex-col items-center bg-[#EDF0FF]">
-      {props.children}
+    <div className="h-full min-h-screen bg-[#EDF0FF]">
+      <div className="flex flex-col items-center ">{props.children}</div>
     </div>
   );
 }
@@ -297,7 +297,14 @@ export function Test(props: { testId: string }) {
         answers: insertAnswers,
       };
     });
-    submitTest.mutate({ testId: props.testId, TestAnswers: insertValues! });
+    submitTest.mutate(
+      { testId: props.testId, TestAnswers: insertValues! },
+      {
+        onSuccess: (value) => {
+          location.replace(`/result/${value.result?.id}`);
+        },
+      },
+    );
   }
 
   return (
@@ -309,7 +316,10 @@ export function Test(props: { testId: string }) {
           </div>
         );
       })}
-      <SubmitTest onSubmit={HandleSubmit} enabled={completed} />
+      <SubmitTest
+        onSubmit={HandleSubmit}
+        enabled={completed && submitTest.isIdle}
+      />
     </div>
   );
 }
@@ -327,7 +337,7 @@ export function QnA(props: {
   }
 
   return (
-    <div className="bg-white">
+    <div className="">
       <QuestionContainer question={question}>
         <AnswerContainer
           answers={answers}

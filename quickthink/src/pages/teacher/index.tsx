@@ -201,7 +201,11 @@ export function TestSection(props: { children?: ReactNode }) {
   const testSelected = useContext(TeacherPageContext).currentTestId;
 
   return (
-    <div className={`${testSelected ? "rounded-lg border shadow" : ""}`}>
+    <div
+      className={`${
+        testSelected ? "rounded-lg border border-black shadow" : ""
+      }`}
+    >
       {props.children}
     </div>
   );
@@ -247,7 +251,7 @@ export function TestTopBar() {
   }
 
   return (
-    <div className="rounded-lg shadow">
+    <div className="rounded-lg border ">
       <div className="flex flex-row items-center justify-between gap-2 p-4">
         <div className="flex flex-col">
           <h1 className="text-lg font-bold text-[#1A2643]">{test.title} </h1>
@@ -259,7 +263,7 @@ export function TestTopBar() {
           </p>
         </div>
       </div>
-      <ul className="flex flex-row justify-between  rounded-b-lg bg-[#1A2643] px-3 py-1 text-white">
+      <ul className="flex flex-row justify-between rounded-b-lg bg-[#1A2643] px-3 py-1 text-white">
         <button
           className=""
           onClick={() => {

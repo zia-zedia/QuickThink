@@ -26,12 +26,18 @@ export default function Home() {
             Inform, Assess, Excel.
           </h1>
           <div className="flex w-[50%] max-w-md flex-row flex-wrap gap-3">
-            <button className="flex-grow rounded bg-[#849EFA] px-3 py-1 text-lg text-white transition-all hover:-translate-y-[2px]">
-              <Link href={"/auth/login"}>Login</Link>
-            </button>
-            <button className="flex-grow rounded px-3 py-1 text-lg text-[#7ea1ed] outline outline-1 outline-[#7ea1ed] transition-all hover:-translate-y-[2px]">
-              <Link href={"/test"}>Take a Test</Link>
-            </button>
+            <Link
+              href={"/auth/login"}
+              className="flex-grow rounded bg-[#849EFA] px-3 py-1 text-center text-lg transition-all hover:-translate-y-[2px]"
+            >
+              <button className=" text-white ">Login</button>
+            </Link>
+            <Link
+              href={"/test"}
+              className="flex-grow rounded px-3 py-1 text-center text-lg text-[#7ea1ed] outline outline-1 outline-[#7ea1ed] transition-all hover:-translate-y-[2px]"
+            >
+              <button className="">Take a Test</button>
+            </Link>
           </div>
         </HeroText>
         <RightSection>

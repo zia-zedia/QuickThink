@@ -169,7 +169,6 @@ export const testRouter = createTRPCRouter({
       if (session.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
-
           message: "We haven't found this session for this test",
         });
       }
@@ -223,7 +222,7 @@ export const testRouter = createTRPCRouter({
           });
         });
       });
-      Promise.all(calculateAnswer).then(async () => {
+      const finalResult = Promise.all(calculateAnswer).then(async () => {
         const finalResult: ResultInsert = {
           testId: input.testId,
           grade: finalGrade / totalGrade,
@@ -232,7 +231,16 @@ export const testRouter = createTRPCRouter({
           .insert(results)
           .values(finalResult)
           .returning();
+        console.log(newResult[0]?.grade);
+        return { result: newResult[0] };
       });
+      if (!finalResult) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An issue occured while trying to submit your result",
+        });
+      }
+      return finalResult;
     }),
 });
 

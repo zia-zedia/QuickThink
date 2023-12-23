@@ -22,8 +22,13 @@ export function RegisterForm() {
   const [isValid, setIsValid] = useState(true);
   const [error, setError] = useState("");
   const createUser = api.auth.signUp.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       setIsValid(true);
+      if (data.user?.role === "student") {
+        window.location.href = "/student";
+      } else if (data.user?.role === "teacher") {
+        window.location.href = "/teacher";
+      }
     },
   });
   function checkEmailAvailability(email: string) {
@@ -39,6 +44,7 @@ export function RegisterForm() {
         password: z.string().min(7).max(24),
       }),
       userData: z.object({
+        username: z.string().min(5).max(15),
         firstName: z.string(),
         lastName: z.string(),
         role: z.enum(["student", "teacher"]),
@@ -52,6 +58,7 @@ export function RegisterForm() {
     createUser.mutate({
       authData: signUpData.authData,
       userData: {
+        userName: signUpData.userData.userName,
         firstName: signUpData.userData.firstName,
         lastName: signUpData.userData.lastName,
         role: signUpData.userData.role,
@@ -79,6 +86,7 @@ export function RegisterForm() {
               password: (event.target as any).password.value,
             },
             userData: {
+              userName: (event.target as any).user_name.value,
               firstName: (event.target as any).first_name.value,
               lastName: (event.target as any).last_name.value,
               role: (event.target as any).role.value,
@@ -91,6 +99,15 @@ export function RegisterForm() {
         }}
       >
         <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1 font-light">
+            <label className="text-xl">Enter your username:</label>
+            <input
+              className={`rounded p-3 text-black`}
+              type="text"
+              placeholder="Enter a username"
+              name="user_name"
+            />
+          </div>
           <div className="flex flex-col gap-1 font-light">
             <label className="text-xl">First Name:</label>
             <input
