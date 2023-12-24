@@ -8,12 +8,11 @@ import {
   createContext,
   useContext,
 } from "react";
-import { z } from "zod";
+import { ZodString, z } from "zod";
 import { Navbar } from "~/components/Navbar";
 import { CourseType } from "~/drizzle/schema";
 import { api } from "~/utils/api";
 import { CardContainer } from "..";
-import { TeacherPageContextData } from ".";
 
 export type CoursePageContextType = {
   currentCourseId: string;
@@ -31,6 +30,8 @@ export const CoursePageContext =
 export default function CoursePage() {
   const [currentCourseId, setCurrentCourseId] = useState("");
 
+  function addParticipant() {}
+
   return (
     <>
       <CoursePageContext.Provider
@@ -44,21 +45,42 @@ export default function CoursePage() {
         <div className="flex h-screen w-full">
           <Navbar></Navbar>
           <YourCourses>
-            <CourseTopBar />
+            <CourseContainer>
+              {!currentCourseId ? (
+                <>
+                  <div className="text-black">Select a course</div>
+                </>
+              ) : (
+                <>
+                  <CourseTopBar />
+                  <Input
+                    label="Add a participant"
+                    validator={usernameValidator}
+                    placeholder="Enter a username"
+                    buttonValue="Add"
+                    handleSubmit={addParticipant}
+                    message={
+                      "Enter a valid email and make sure shorter than 20 characters"
+                    }
+                  />
+                </>
+              )}
+            </CourseContainer>
           </YourCourses>
         </div>
       </CoursePageContext.Provider>
     </>
   );
 }
+const usernameValidator = z.string().min(5).max(15);
 
 export function YourCourses(props: { children?: ReactNode }) {
   const { data, error, isError, isLoading } = api.teacher.getCourses.useQuery();
   const { currentCourseId } = useContext(CoursePageContext);
   return (
-    <div className="flex h-screen w-full border border-black">
+    <div className="flex h-screen w-full">
       <div className="sticky h-full w-[25%] bg-[#EDF0FF] p-3">
-        <h1 className="pb-4 text-xl font-bold">Your Tests</h1>
+        <h1 className="pb-4 text-xl font-bold">Your Courses</h1>
         <div className="flex flex-col gap-3">
           {isError ? (
             <>
@@ -100,6 +122,20 @@ export function YourCourses(props: { children?: ReactNode }) {
   );
 }
 
+export function CourseContainer(props: { children: ReactNode }) {
+  const { currentCourseId } = useContext(CoursePageContext);
+
+  return (
+    <div
+      className={`${
+        currentCourseId ? "rounded-lg shadow" : ""
+      } w-full max-w-4xl p-3`}
+    >
+      {props.children}
+    </div>
+  );
+}
+
 export function CourseInfoContainer(props: {
   course: CourseType;
   selected: boolean;
@@ -131,9 +167,6 @@ export function CourseInfoContainer(props: {
 
 export function CourseTopBar() {
   const { currentCourseId } = useContext(CoursePageContext);
-  if (!currentCourseId) {
-    return <div className="text-black">Select a course</div>;
-  }
 
   const { data, error, isLoading, isError } =
     api.teacher.getCourseDataWithId.useQuery({
@@ -152,8 +185,10 @@ export function CourseTopBar() {
             <div className="rounded-lg border">
               <div className="flex flex-row items-center justify-between gap-2 p-4">
                 <div className="flex flex-col">
-                  <h1 className="text-lg font-bold text-[#1A2643]">{} </h1>
-                  <p className="text-sm">{data.course?.name}</p>
+                  <h1 className="text-lg font-bold text-[#1A2643]">
+                    {data.course?.name}
+                  </h1>
+                  <p className="text-xl font-bold"></p>
                 </div>
               </div>
               <ul className="flex flex-row justify-between rounded-b-lg bg-[#1A2643] px-3 py-1 text-white"></ul>
@@ -162,5 +197,71 @@ export function CourseTopBar() {
         </>
       )}
     </>
+  );
+}
+
+export function Input(props: {
+  handleSubmit: (value: string) => void;
+  validator: ZodString;
+  label?: string;
+  placeholder?: string;
+  message?: string;
+  buttonValue?: string;
+}) {
+  const [value, setValue] = useState("");
+  const [isError, setError] = useState(false);
+  const { placeholder, validator, message, label, handleSubmit, buttonValue } =
+    props;
+
+  useEffect(() => {
+    if (value === "") {
+      setError(false);
+      return;
+    }
+    const validation = validator.safeParse(value);
+    console.log(validation.success);
+    if (validation.success) {
+      setError(false);
+      return;
+    }
+    setError(true);
+  }, [value]);
+
+  return (
+    <div className="flex flex-col gap-1 rounded-lg border p-2 shadow">
+      <label className="text-lg font-bold">{label ? label : ""}</label>
+      <div className="flex flex-row justify-between gap-3">
+        <input
+          value={value}
+          placeholder={placeholder ? placeholder : ""}
+          onChange={(event) => {
+            setValue(event.target.value);
+          }}
+          className={`${
+            isError
+              ? "text-red border border-red-500"
+              : "border border-gray-300 hover:border-gray-400 "
+          } w-[90%] rounded-lg px-2 outline-none transition-all focus:outline-none`}
+        />
+        <button
+          className={`${
+            isError || value.length === 0
+              ? "bg-blue-200 text-gray-100"
+              : "text-white hover:bg-blue-400"
+          } rounded-lg bg-blue-300 px-4 py-2 transition-all`}
+          onClick={() => {
+            if (!isError) {
+              handleSubmit(value);
+            }
+          }}
+          disabled={isError || !value}
+        >
+          {buttonValue ? buttonValue : "Submit"}
+        </button>
+      </div>
+      <p className="text-sm text-red-500">
+        {message && isError ? message : null}
+      </p>
+    </div>
   );
 }
