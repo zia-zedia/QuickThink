@@ -17,6 +17,7 @@ import { api } from "~/utils/api";
 import { CardContainer } from "..";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { Navbar } from "~/components/Navbar";
+import { ConsoleLogWriter } from "drizzle-orm";
 
 const defaultContext: TeacherPageContextData = {
   currentTestId: "",
@@ -79,14 +80,27 @@ export default function TeacherLayout() {
 }
 
 export function YourTests(props: { children?: ReactNode }) {
-  const { isLoading, isError, data, error, isSuccess, isPreviousData } =
-    api.teacher.getTestList.useQuery();
+  const {
+    isLoading,
+    isError,
+    data,
+    error,
+    isSuccess,
+    isPreviousData,
+    refetch,
+    isRefetching,
+  } = api.teacher.getTestList.useQuery();
 
+  const testAdd = api.teacher.addTest.useMutation({
+    onSuccess: () => {
+      refetch();
+    },
+  });
   const { currentTestId, testStates, setTestStates } =
     useContext(TeacherPageContext);
 
   useEffect(() => {
-    if (isSuccess && data.length > 0 && !isPreviousData) {
+    if ((isSuccess && data.length > 0 && !isPreviousData) || isRefetching) {
       const newTestStates: Array<TestState> = [];
       data.map((value) => {
         const testInState = testStates.filter(
@@ -110,32 +124,43 @@ export function YourTests(props: { children?: ReactNode }) {
     }
   }, [data]);
 
+  function addTest() {
+    testAdd.mutate();
+    refetch();
+  }
+
   return (
     <div className="flex h-screen w-full border border-black">
       <div className="sticky h-full w-[25%] bg-[#EDF0FF] p-3">
         <h1 className="pb-4 text-xl font-bold">Your Tests</h1>
-        <div className="flex flex-col gap-3">
-          {isError ? (
-            <>
-              An error occurred.
-              {error.message}
-            </>
+        <div className="h-[95%] w-full overflow-y-scroll p-2">
+          {isLoading ? (
+            <>Loading...</>
           ) : (
             <>
-              {isLoading ? (
-                <>Loading...</>
-              ) : (
+              {isError ? (
                 <>
-                  {data.map((value) => {
+                  An error occurred.
+                  {error.message}
+                </>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {testStates.map((value) => {
                     return (
                       <TestInfoContainer
-                        key={value.tests.id}
-                        test={value.tests}
-                        selected={value.tests.id === currentTestId}
+                        key={value.testData.id}
+                        test={value.testData}
+                        selected={value.testData.id === currentTestId}
                       />
                     );
                   })}
-                </>
+                  <button
+                    className="w-full rounded-lg bg-white p-2 text-center text-blue-800 outline outline-1 outline-blue-800"
+                    onClick={addTest}
+                  >
+                    Add Test
+                  </button>
+                </div>
               )}
             </>
           )}
@@ -179,6 +204,7 @@ export function TestInfoContainer(props: {
         } w-full rounded-lg bg-white p-3  transition-all hover:-translate-y-1 `}
         onClick={handleClick}
       >
+        <p className="text-ellipsis font-bold">{test.title}</p>
         <p className="text-ellipsis font-light">{test.description}</p>
         <div className="flex items-center justify-between">
           <h1 className="italic">
@@ -201,11 +227,7 @@ export function TestSection(props: { children?: ReactNode }) {
   const testSelected = useContext(TeacherPageContext).currentTestId;
 
   return (
-    <div
-      className={`${
-        testSelected ? "rounded-lg border border-black shadow" : ""
-      }`}
-    >
+    <div className={`${testSelected ? "rounded-lg bg-white shadow" : ""}`}>
       {props.children}
     </div>
   );
@@ -213,17 +235,80 @@ export function TestSection(props: { children?: ReactNode }) {
 
 export function TestTopBar() {
   const testId = useContext(TeacherPageContext).currentTestId;
-  const currentTestState = useContext(TeacherPageContext).testStates.filter(
-    (states) => states.testId === testId,
-  );
   if (!testId) {
     return <div className="text-black">Select a test</div>;
   }
 
-  const { isLoading, isError, data, error } =
-    api.tests.getTestIntroWithId.useQuery({ test_id: testId });
+  const {
+    isLoading,
+    isError,
+    data,
+    error,
+    isPreviousData,
+    isSuccess,
+    isRefetching,
+  } = api.tests.getTestIntroWithId.useQuery({ test_id: testId });
 
+  const { currentTestId, setCurrentTestId, testStates, setTestStates } =
+    useContext(TeacherPageContext);
+
+  const currentTestState = testStates.filter(
+    (state) => state.testId === currentTestId,
+  );
+
+  const currentTest = testStates.filter(
+    (state) => state.testId === currentTestId,
+  )[0]?.testData!;
+
+  const [title, setTitle] = useState(currentTest.title);
+  const [description, setDescription] = useState(currentTest.description);
+  const [isDeleting, setIsDeleting] = useState(false);
   const saveDraft = api.teacher.saveDraft.useMutation();
+  const testDelete = api.teacher.deleteTest.useMutation({
+    onSuccess: (value) => {
+      setCurrentTestId("");
+      const deletedTest = value[0]!;
+      const newTestStates = testStates.filter(
+        (state) => state.testId != deletedTest.id,
+      );
+      newTestStates.map((state) => {
+        console.log(state.testId);
+      });
+      setTestStates(newTestStates);
+    },
+  });
+  function deleteTest() {
+    testDelete.mutate({ test_id: currentTestId });
+  }
+
+  useEffect(() => {
+    const newTestStates = testStates.map((state) => {
+      if (state.testId === currentTestId) {
+        console.log(state.testId);
+        console.log(state.testData.title);
+        return {
+          ...state,
+          testData: { ...state.testData, title: title },
+        };
+      }
+      return state;
+    });
+    setTestStates(newTestStates);
+  }, [title]);
+
+  useEffect(() => {
+    const newTestStates = testStates.map((state) => {
+      if (state.testId === currentTestId) {
+        console.log(state.testData.description);
+        return {
+          ...state,
+          testData: { ...state.testData, description: description },
+        };
+      }
+      return state;
+    });
+    setTestStates(newTestStates);
+  }, [description]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -237,7 +322,6 @@ export function TestTopBar() {
       </div>
     );
   }
-  const test = data.testData!;
 
   function handleDraftSaving() {
     if (currentTestState.length === 0) {
@@ -251,40 +335,86 @@ export function TestTopBar() {
   }
 
   return (
-    <div className="rounded-lg border ">
+    <div className="rounded-lg border bg-white">
       <div className="flex flex-row items-center justify-between gap-2 p-4">
         <div className="flex flex-col">
-          <h1 className="text-lg font-bold text-[#1A2643]">{test.title} </h1>
-          <p className="text-sm">{test.description}</p>
+          <input
+            className="bg-none text-lg font-bold text-[#1A2643] outline-none"
+            value={currentTest.title!}
+            onChange={(event) => {
+              console.log("triggered >:P");
+              setTitle(event.target.value);
+            }}
+          />
+          <input
+            className="text-sm outline-none"
+            value={currentTest.description!}
+            onChange={(event) => {
+              console.log("triggered >:P");
+              setDescription(event.target.value);
+            }}
+          />
         </div>
         <div>
           <p className="font-light">
-            Published on: {test.publishDate?.toDateString()}
+            Published on: {data.testData?.publishDate!.toDateString()}
           </p>
         </div>
       </div>
-      <ul className="flex flex-row justify-between rounded-b-lg bg-[#1A2643] px-3 py-1 text-white">
-        <button
-          className=""
-          onClick={() => {
-            handleDraftSaving();
-          }}
-        >
-          {saveDraft.isLoading ? (
-            <div>Saving...</div>
-          ) : saveDraft.isSuccess ? (
-            <div>Saved succesfully ✓</div>
-          ) : saveDraft.isIdle ? (
-            <div>Save Draft</div>
-          ) : (
-            <div>Save Draft</div>
-          )}
-        </button>
-        <div className="flex flex-row gap-5">
-          <button className="">Delete Test</button>
-          <button className="">Publish</button>
-        </div>
-      </ul>
+      <div className="flex flex-col rounded-b-lg bg-[#1A2643] px-3 py-1 text-white">
+        <ul className="flex flex-row justify-between ">
+          <button
+            className=""
+            onClick={() => {
+              handleDraftSaving();
+            }}
+          >
+            {saveDraft.isLoading ? (
+              <div>Saving...</div>
+            ) : saveDraft.isSuccess ? (
+              <div>Saved succesfully ✓</div>
+            ) : saveDraft.isIdle ? (
+              <div>Save Draft</div>
+            ) : (
+              <div>Save Draft</div>
+            )}
+          </button>
+          <div className="flex flex-row gap-5">
+            <button
+              className=""
+              onClick={() => {
+                setIsDeleting(!isDeleting);
+              }}
+            >
+              Delete Test
+            </button>
+            <button className="">Publish</button>
+          </div>
+        </ul>
+        {isDeleting ? (
+          <div className="flex w-full flex-row justify-between">
+            <p>Delete this test? This is irreversible.</p>
+            <section className="flex flex-row justify-between gap-3">
+              <button
+                className="hover: rounded-lg bg-[#d47979] px-4 py-1 text-white transition-all hover:bg-[#bb4343]"
+                onClick={() => {
+                  deleteTest();
+                }}
+              >
+                Yes
+              </button>
+              <button
+                className="rounded-lg bg-white px-4 py-1 text-[#1A2643] transition-all hover:bg-gray-200"
+                onClick={() => {
+                  setIsDeleting(false);
+                }}
+              >
+                Cancel
+              </button>
+            </section>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -295,8 +425,10 @@ export function QuestionsSection() {
     return null;
   }
   const { testStates, setTestStates } = useContext(TeacherPageContext);
+
   const { isError, isLoading, data, error, isSuccess, isRefetching } =
     api.tests.getTestDataWithId.useQuery({ test_id: testId });
+
   const questionDelete = api.teacher.deleteQuestion.useMutation();
 
   useEffect(() => {
@@ -341,6 +473,7 @@ export function QuestionsSection() {
   };
 
   const test = testStates.filter((state) => state.testId === testId)[0]?.state!;
+
   function addQuestion() {
     const newTestStates = testStates.map((state) => {
       if (state.testId === testId) {
@@ -435,7 +568,7 @@ export function QuestionsSection() {
       </Droppable>
       <div className="flex w-full flex-row justify-center p-2">
         <button
-          className="w-full rounded-lg p-2 text-center text-blue-300 outline outline-1 outline-blue-300"
+          className="w-full rounded-lg bg-white p-2 text-center text-blue-300 outline outline-1 outline-blue-300"
           onClick={addQuestion}
         >
           Add Question

@@ -23,8 +23,28 @@ import { eq } from "drizzle-orm";
 import test from "node:test";
 import { TRPCError } from "@trpc/server";
 import { db } from "~/server/db";
+import { contextProps } from "@trpc/react-query/shared";
 
 export const teacherRouter = createTRPCRouter({
+  deleteTest: publicProcedure
+    .input(z.object({ test_id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.db
+        .delete(tests)
+        .where(eq(tests.id, input.test_id))
+        .returning();
+    }),
+  addTest: publicProcedure.mutation(async ({ ctx }) => {
+    return await ctx.db
+      .insert(tests)
+      .values({
+        title: "New Test Draft",
+        description: "Describe your test here",
+        visibility: "draft",
+        difficulty: "EASY",
+      })
+      .returning();
+  }),
   getCourseDataWithId: publicProcedure
     .input(z.object({ course_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
@@ -32,7 +52,6 @@ export const teacherRouter = createTRPCRouter({
         .select()
         .from(courses)
         .where(eq(courses.id, input.course_id));
-
       return { course: course[0] };
     }),
   getCourses: publicProcedure.query(async ({ ctx }) => {
@@ -87,6 +106,12 @@ export const teacherRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       const db = ctx.db;
+
+      await db
+        .update(tests)
+        .set({ title: input.test.title, description: input.test.description })
+        .where(eq(tests.id, input.test.id!));
+
       input.draft.map(async (QnA, index) => {
         // I used Math.Random for the new questions, so they have to be inbetween 0 and 1
         console.log(QnA.question.id!);

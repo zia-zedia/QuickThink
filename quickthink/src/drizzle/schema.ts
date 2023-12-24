@@ -64,7 +64,10 @@ export const tests = pgTable("tests", {
 export const questions = pgTable("questions", {
   id: serial("id").primaryKey().notNull(),
   content: text("content"),
-  testId: uuid("test_id").references(() => tests.id),
+  testId: uuid("test_id").references(() => tests.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
   grade: integer("grade").notNull().default(1),
   sequence: integer("sequence"),
   answerAmount: integer("answer_amount").default(1),
