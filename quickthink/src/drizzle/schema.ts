@@ -148,3 +148,4 @@ export type Answer = Omit<typeof answers.$inferInsert, "isCorrect">;
 export type AnswerType = typeof answers.$inferInsert;
 export type ResultInsert = typeof results.$inferInsert;
 export type CourseType = typeof courses.$inferSelect;
+export type UserType = typeof users.$inferSelect;

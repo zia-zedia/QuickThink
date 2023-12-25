@@ -71,14 +71,15 @@ export const authRouter = createTRPCRouter({
         .returning();
 
       if (newUser[0]?.role === "teacher") {
-        await ctx.db
-          .insert(organization)
-          .values({
-            name: `${newUser[0].userName}'s organization`,
-            creatorId: newUser[0].id,
-          });
+        await ctx.db.insert(organization).values({
+          name: `${newUser[0].userName}'s organization`,
+          creatorId: newUser[0].id,
+        });
       }
-
+      const login = await supabase.auth.signInWithPassword({
+        email: input.authData.email,
+        password: input.authData.password,
+      });
       return { user: newUser[0] };
     }),
   isLoggedIn: publicProcedure.query(async ({ ctx }) => {
