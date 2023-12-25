@@ -486,7 +486,7 @@ export function TestSelection(props: {
 
   const { tests, handleTestAdding } = props;
   return (
-    <div>
+    <div className="flex flex-col gap-2">
       {tests.map((test) => {
         const isSelected =
           selectedTests.filter((t) => {
@@ -505,7 +505,7 @@ export function TestSelection(props: {
         );
       })}
       <button
-        className=""
+        className="w-full rounded-lg bg-blue-400 py-2 text-white hover:bg-blue-500"
         onClick={() => {
           handleTestAdding(selectedTests);
         }}
@@ -527,14 +527,19 @@ export function SelectTest(props: {
     <div
       className={`${
         selected
-          ? "outline outline-1 outline-red-300"
-          : "outline outline-1 outline-gray-200"
-      } w-full`}
+          ? "outline outline-1 outline-green-300 hover:outline-green-400"
+          : "outline outline-1 outline-gray-200 hover:outline-gray-300"
+      } w-full rounded-lg px-3 py-4 `}
       onClick={() => {
         handleSelection(test);
       }}
     >
-      {test.title}
+      <div className="flex flex-col justify-between">
+        <h1 className={`font-bold`}>{test.title}</h1>
+        <p className="text-sm font-light">
+          Published on {test.publishedAt?.toLocaleDateString()}
+        </p>
+      </div>
     </div>
   );
 }
