@@ -5,7 +5,7 @@ import {
   authenticatedProcedure,
   teacherProcedure,
 } from "../trpc";
-import { courses, user_courses, users } from "~/drizzle/schema";
+import { courses, tests, user_courses, users } from "~/drizzle/schema";
 import { and, eq } from "drizzle-orm";
 import test from "node:test";
 import { TRPCError } from "@trpc/server";
@@ -13,6 +13,26 @@ import { db } from "~/server/db";
 import { contextProps } from "@trpc/react-query/shared";
 
 export const courseRouter = createTRPCRouter({
+  getTests: publicProcedure.query(async ({ ctx, input }) => {
+    return await ctx.db.select().from(tests);
+  }),
+  getTeacherTest: teacherProcedure.query(async ({ ctx, input }) => {
+    if (!ctx.user) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+    return await ctx.db
+      .select()
+      .from(tests)
+      .where(eq(tests.teacherId, ctx.user?.id!));
+  }),
+  getCourseTests: publicProcedure
+    .input(z.object({ course_id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.db
+        .select()
+        .from(tests)
+        .where(eq(tests.courseId, input.course_id));
+    }),
   getParticipants: publicProcedure
     .input(z.object({ course_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {

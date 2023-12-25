@@ -10,9 +10,10 @@ import {
 } from "react";
 import { ZodString, set, z } from "zod";
 import { Navbar } from "~/components/Navbar";
-import { CourseType, UserType } from "~/drizzle/schema";
+import { CourseType, TestType, UserType } from "~/drizzle/schema";
 import { api } from "~/utils/api";
 import { CardContainer } from "..";
+import { TestComponent } from "../student";
 
 export type CoursePageContextType = {
   selectedCourse: CourseType | null;
@@ -76,17 +77,23 @@ export default function CoursePage() {
               ) : (
                 <>
                   <CourseTopBar course={selectedCourse} />
-                  <Input
-                    label="Add a participant"
-                    validator={usernameValidator}
-                    placeholder="Enter a username"
-                    buttonValue="Add"
-                    handleSubmit={addParticipant}
-                    message={
-                      "Enter a valid email and make sure shorter than 20 characters"
-                    }
-                  />
-                  <ParticipantList />
+                  <div className="">
+                    <h1 className="text-xl font-bold">Participants</h1>
+                    <Input
+                      label="Add a participant"
+                      validator={usernameValidator}
+                      placeholder="Enter a username"
+                      buttonValue="Add"
+                      handleSubmit={addParticipant}
+                      message={
+                        "Enter a valid email and make sure shorter than 20 characters"
+                      }
+                    />
+                    <ParticipantList />
+                  </div>
+                  <div>
+                    <TestList />
+                  </div>
                 </>
               )}
             </CourseContainer>
@@ -126,6 +133,7 @@ export function YourCourses(props: {
             {courses.map((course) => {
               return (
                 <CourseInfoContainer
+                  key={course.id}
                   course={course}
                   selected={course.id === selectedCourse?.id}
                 />
@@ -186,7 +194,7 @@ export function CourseTopBar(props: { course: CourseType }) {
 
   return (
     <>
-      <div className="rounded-lg border">
+      <div className="rounded-lg border bg-white">
         <div className="flex flex-row items-center justify-between gap-2 p-4">
           <div className="flex flex-col">
             <h1 className="text-lg font-bold text-[#1A2643]">{course.name}</h1>
@@ -227,7 +235,7 @@ export function Input(props: {
   }, [value]);
 
   return (
-    <div className="flex flex-col gap-1 rounded-lg border p-2 shadow">
+    <div className="flex flex-col gap-1 rounded-lg border bg-white p-2 shadow">
       <label className="text-lg font-bold">{label ? label : ""}</label>
       <div className="flex flex-row justify-between gap-3">
         <input
@@ -274,6 +282,10 @@ export function ParticipantList() {
   const { data, error, isLoading, isError } =
     api.courses.getParticipants.useQuery({ course_id: selectedCourse.id });
 
+  function deleteParticipant(participant: UserType) {
+    console.log(participant.id);
+  }
+
   return (
     <>
       {isLoading ? (
@@ -286,7 +298,12 @@ export function ParticipantList() {
             <div className="flex flex-col gap-2 py-2">
               {data.map((value) => {
                 const participant = value.users;
-                return <Participant participant={participant!} />;
+                return (
+                  <Participant
+                    participant={participant!}
+                    handleDelete={deleteParticipant}
+                  />
+                );
               })}
             </div>
           )}
@@ -296,10 +313,15 @@ export function ParticipantList() {
   );
 }
 
-export function Participant(props: { participant: UserType }) {
-  const participant = props.participant;
+export function Participant(props: {
+  participant: UserType;
+  handleDelete: (participant: UserType) => void;
+}) {
+  const { participant, handleDelete } = props;
+  const [isDeleting, setIsDeleting] = useState(false);
+
   return (
-    <div className="rounded-lg border p-3 shadow">
+    <div className="flex flex-col gap-2 rounded-lg border bg-white px-5 py-3 shadow transition-all hover:border-gray-300">
       <div className="flex flex-row items-center justify-between">
         <div className="flex flex-row items-center gap-2">
           <p className="font-light">
@@ -307,10 +329,212 @@ export function Participant(props: { participant: UserType }) {
           </p>
           <p className="font-bold italic">@{participant.userName}</p>
         </div>
-        <p className="rounded-lg bg-blue-400 px-2 py-1 text-white">
-          {participant.role}
-        </p>
+        <div className="flex flex-row gap-2">
+          <p className="rounded-lg bg-blue-400 px-2 py-1 text-white">
+            {participant.role}
+          </p>
+          <button
+            className=""
+            onClick={() => {
+              setIsDeleting(!isDeleting);
+            }}
+          >
+            <div className="h-6 w-6">
+              <img
+                src={"/trash_icon.svg"}
+                alt="Dropdown Toggle"
+                className="fill-[#1A2643] object-contain"
+              />
+            </div>
+          </button>
+        </div>
       </div>
+      {isDeleting ? (
+        <div className="flex w-full flex-row justify-between">
+          <p>Are you sure you want to unenroll this student?</p>
+          <section className="flex flex-row justify-between gap-3">
+            <button
+              className="hover: rounded-lg bg-[#d47979] px-4 py-1 text-white transition-all hover:bg-[#bb4343]"
+              onClick={() => {
+                handleDelete(participant);
+              }}
+            >
+              Yes
+            </button>
+            <button
+              className="rounded-lg bg-white px-4 py-1 text-[#1A2643] outline outline-1 outline-gray-300 transition-all hover:bg-gray-200"
+              onClick={() => {
+                setIsDeleting(false);
+              }}
+            >
+              Cancel
+            </button>
+          </section>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function TestList() {
+  const { selectedCourse } = useContext(CoursePageContext);
+
+  if (!selectedCourse) {
+    return;
+  }
+
+  const { data, error, isError, isLoading } =
+    api.courses.getCourseTests.useQuery({ course_id: selectedCourse.id });
+  const {
+    data: teacherTests,
+    error: teacherError,
+    isError: teacherIsError,
+    isLoading: teacherIsLoading,
+  } = api.courses.getTests.useQuery();
+  const [isAdding, setIsAdding] = useState(false);
+  return (
+    <div className="">
+      {isLoading ? (
+        <>Loading...</>
+      ) : (
+        <>
+          {isError ? (
+            <>An error occurred {error.message}</>
+          ) : (
+            <>
+              <div>
+                {data.length === 0 ? (
+                  <>No tests found in this course</>
+                ) : (
+                  <>
+                    {data.map((test) => {
+                      return <Test test={test} />;
+                    })}
+                  </>
+                )}
+                <div className="relative inline-block w-full">
+                  <button
+                    className="w-full rounded-lg bg-white p-2 text-center text-blue-300 outline outline-1 outline-blue-300"
+                    onClick={() => {
+                      setIsAdding(!isAdding);
+                    }}
+                  >
+                    {isAdding ? <p>Cancel</p> : <p>Add Test</p>}
+                  </button>
+                  {isAdding ? (
+                    <div className="absolute z-10 w-full origin-bottom translate-y-1 rounded-lg border bg-white shadow-lg focus:outline-none">
+                      <div className="w-full p-2">
+                        {teacherIsLoading ? (
+                          <>Loading...</>
+                        ) : (
+                          <>
+                            {teacherIsError ? (
+                              <>An error ocurred, {teacherError.message}</>
+                            ) : (
+                              <TestSelection tests={teacherTests} />
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+export function Test(props: { test: TestType }) {
+  const test = props.test;
+  return (
+    <div className="flex w-full flex-col rounded bg-white p-3 shadow">
+      <h1 className="font-bold">{test.title}</h1>
+      <div>
+        <p className="font-light">{test.description}</p>
+      </div>
+    </div>
+  );
+}
+
+export function TestSelection(props: {
+  tests: TestType[];
+  handleTestAdding: (selectedTests: TestType[]) => {};
+}) {
+  const [selectedTests, setSelectedTests] = useState<TestType[]>([]);
+
+  function handleTestSelection(test: TestType) {
+    const alreadyListed =
+      selectedTests.filter((selectedAnswer) => {
+        return selectedAnswer.id === test.id;
+      }).length > 0;
+    console.log(alreadyListed);
+
+    if (alreadyListed) {
+      setSelectedTests(
+        selectedTests.filter((selectedAnswer) => {
+          return !(test.id === selectedAnswer.id);
+        }),
+      );
+      return;
+    }
+    setSelectedTests(selectedTests.concat(test));
+  }
+
+  const { tests, handleTestAdding } = props;
+  return (
+    <div>
+      {tests.map((test) => {
+        const isSelected =
+          selectedTests.filter((t) => {
+            return t.id === test.id;
+          }).length === 1;
+
+        return (
+          <SelectTest
+            key={test.id}
+            test={test}
+            selected={isSelected}
+            handleSelection={(test) => {
+              handleTestSelection(test);
+            }}
+          />
+        );
+      })}
+      <button
+        className=""
+        onClick={() => {
+          handleTestAdding(selectedTests);
+        }}
+      >
+        Add tests
+      </button>
+    </div>
+  );
+}
+
+export function SelectTest(props: {
+  test: TestType;
+  selected: boolean;
+  handleSelection: (test: TestType) => {};
+}) {
+  const { test, selected, handleSelection } = props;
+
+  return (
+    <div
+      className={`${
+        selected
+          ? "outline outline-1 outline-red-300"
+          : "outline outline-1 outline-gray-200"
+      } w-full`}
+      onClick={() => {
+        handleSelection(test);
+      }}
+    >
+      {test.title}
     </div>
   );
 }
