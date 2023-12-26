@@ -204,8 +204,18 @@ export function TestInfoContainer(props: {
         } w-full rounded-lg bg-white p-3  transition-all hover:-translate-y-1 `}
         onClick={handleClick}
       >
-        <p className="text-ellipsis font-bold">{test.title}</p>
-        <p className="text-ellipsis font-light">{test.description}</p>
+        <div className="flex flex-row justify-between">
+          <p className="truncate font-bold">{test.title}</p>
+          <img
+            src={"/share_icon.svg"}
+            alt="Share"
+            className="h-[20px] w-[20px] cursor-pointer fill-[#1A2643] object-contain"
+            onClick={() => {
+              navigator.clipboard.writeText(`${test.id}`);
+            }}
+          />
+        </div>
+        <p className="truncate font-light">{test.description}</p>
         <div className="flex items-center justify-between">
           <h1 className="italic">
             Published on {test.publishedAt?.getDay().toString()}

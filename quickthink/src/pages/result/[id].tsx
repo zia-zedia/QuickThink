@@ -45,13 +45,9 @@ export default function ResultPage() {
                             </p>
                           </div>
                           <div>
-                            <Link href={"/auth/student"}>
-                              <button>
-                                <p className="font-light">
-                                  Great job, keep focusing.
-                                </p>
-                              </button>
-                            </Link>
+                            <p className="font-light">
+                              Great job, keep focusing.
+                            </p>
                           </div>
                         </div>
                       )}

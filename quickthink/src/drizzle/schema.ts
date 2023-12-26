@@ -16,7 +16,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
-export const organization = pgTable("organization", {
+export const organizations = pgTable("organization", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   name: text("name"),
   creatorId: uuid("user_id").references(() => users.id),
@@ -58,7 +58,9 @@ export const tests = pgTable("tests", {
   difficulty: difficultyEnum("difficulty").default("EASY"),
   visibility: visibilityEnum("visibility").default("public"),
   teacherId: uuid("teacher_id").references(() => users.id),
-  courseId: uuid("course_id").references(() => courses.id),
+  courseId: uuid("course_id").references(() => courses.id, {
+    onDelete: "set null",
+  }),
 });
 
 export const questions = pgTable("questions", {
@@ -149,3 +151,4 @@ export type AnswerType = typeof answers.$inferInsert;
 export type ResultInsert = typeof results.$inferInsert;
 export type CourseType = typeof courses.$inferSelect;
 export type UserType = typeof users.$inferSelect;
+export type OrganizationType = typeof organization.$inferSelect;

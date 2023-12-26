@@ -217,7 +217,7 @@ export const testRouter = createTRPCRouter({
         QnA.answers.map((answer) => {
           correctAnswers.map((correctAnswer) => {
             if (correctAnswer.id === answer.id) {
-              finalGrade += QnA.question.grade;
+              finalGrade += QnA.question.grade / QnA.question.answerAmount!;
             }
           });
         });

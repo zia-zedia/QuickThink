@@ -5,49 +5,60 @@ import {
   authenticatedProcedure,
   teacherProcedure,
 } from "../trpc";
-import { ZodTest, courses, tests, user_courses, users } from "~/drizzle/schema";
+import {
+  ZodTest,
+  organizations,
+  tests,
+  user_org,
+  users,
+} from "~/drizzle/schema";
 import { and, eq, isNull, not } from "drizzle-orm";
 import test from "node:test";
 import { TRPCError } from "@trpc/server";
 import { db } from "~/server/db";
 import { contextProps } from "@trpc/react-query/shared";
 
-export const courseRouter = createTRPCRouter({
-  updateCourseData: publicProcedure
+export const organizationRouter = createTRPCRouter({
+  getOrganizations: publicProcedure.query(async ({ ctx }) => {
+    return await ctx.db.select().from(organizations);
+  }),
+  updateOrganizationData: publicProcedure
     .input(
       z.object({
-        course_id: z.string().uuid(),
+        organization_id: z.string().uuid(),
         name: z.string(),
         description: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       return await ctx.db
-        .update(courses)
-        .set({ name: input.name, description: input.description })
-        .where(eq(courses.id, input.course_id));
+        .update(organizations)
+        .set({ name: input.name })
+        .where(eq(organizations.id, input.organization_id));
     }),
-  addCourse: publicProcedure.mutation(async ({ ctx }) => {
+  addOrganization: publicProcedure.mutation(async ({ ctx }) => {
     return await ctx.db
-      .insert(courses)
-      .values({ name: "New Course", description: "Describe your course" });
+      .insert(organizations)
+      .values({ name: "New Organization" });
   }),
-  removeTestFromCourse: publicProcedure
+  removeTestFromOrganization: publicProcedure
     .input(z.object({ test_id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       return await ctx.db
         .update(tests)
-        .set({ courseId: null })
+        .set({ organizationId: null })
         .where(eq(tests.id, input.test_id));
     }),
-  addTestsToCourse: publicProcedure
-    .input(z.object({ course_id: z.string().uuid(), tests: z.array(ZodTest) }))
+  addTestsToOrganization: publicProcedure
+    .input(
+      z.object({ organization_id: z.string().uuid(), tests: z.array(ZodTest) }),
+    )
     .mutation(async ({ ctx, input }) => {
       const updatedTests = input.tests.map(async (test) => {
         await ctx.db
           .update(tests)
-          .set({ courseId: input.course_id })
-          .where(and(eq(tests.id, test.id), isNull(tests.courseId)))
+          .set({ organizationId: input.organization_id })
+          .where(and(eq(tests.id, test.id), isNull(tests.organizationId)))
           .returning();
       });
       const update = await Promise.all(updatedTests).then(() => {
@@ -67,49 +78,58 @@ export const courseRouter = createTRPCRouter({
       .from(tests)
       .where(eq(tests.teacherId, ctx.user?.id!));
   }),
-  getCourseTests: publicProcedure
-    .input(z.object({ course_id: z.string().uuid() }))
+  getOrganizationTests: publicProcedure
+    .input(z.object({ organization_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       return await ctx.db
         .select()
         .from(tests)
-        .where(eq(tests.courseId, input.course_id));
+        .where(eq(tests.organizationId, input.organization_id));
     }),
   removeParticipant: publicProcedure
     .input(
-      z.object({ course_id: z.string().uuid(), user_id: z.string().uuid() }),
+      z.object({
+        organization_id: z.string().uuid(),
+        user_id: z.string().uuid(),
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       return await ctx.db
-        .delete(user_courses)
+        .delete(user_org)
         .where(
           and(
-            eq(user_courses.courseId, input.course_id),
-            eq(user_courses.userId, input.user_id),
+            eq(user_org.organizationId, input.organization_id),
+            eq(user_org.userId, input.user_id),
           ),
         );
     }),
   getParticipants: publicProcedure
-    .input(z.object({ course_id: z.string().uuid() }))
+    .input(z.object({ organization_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       return await ctx.db
         .select()
-        .from(user_courses)
-        .leftJoin(users, eq(user_courses.userId, users.id))
-        .leftJoin(courses, eq(user_courses.courseId, courses.id))
-        .where(and(eq(courses.id, input.course_id), eq(users.role, "student")));
+        .from(user_org)
+        .leftJoin(users, eq(user_org.userId, users.id))
+        .leftJoin(organizations, eq(user_org.organizationId, organizations.id))
+        .where(
+          and(
+            eq(organizations.id, input.organization_id),
+            eq(users.role, "student"),
+          ),
+        );
     }),
   addParticipant: publicProcedure
     .input(
       z.object({
         username: z.string().min(5).max(15),
-        course_id: z.string().uuid(),
+        organization_id: z.string().uuid(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const user = await ctx.db
-        .select({ id: users.id })
+        .select()
         .from(users)
+        .leftJoin(user_org, eq(user_org.userId, users.id))
         .where(eq(users.userName, input.username));
 
       if (user.length === 0 || !user) {
@@ -119,7 +139,12 @@ export const courseRouter = createTRPCRouter({
         });
       }
 
-      if (user.length >= 1) {
+      if (
+        user.filter(
+          (data) =>
+            data.user_organization?.organizationId === input.organization_id,
+        ).length >= 1
+      ) {
         throw new TRPCError({
           code: "CONFLICT",
           message: "User already added.",
@@ -127,8 +152,11 @@ export const courseRouter = createTRPCRouter({
       }
 
       return await ctx.db
-        .insert(user_courses)
-        .values({ userId: user[0]!.id, courseId: input.course_id })
+        .insert(user_org)
+        .values({
+          userId: user[0]!.users?.id!,
+          organizationId: input.organization_id,
+        })
         .returning();
     }),
 });
