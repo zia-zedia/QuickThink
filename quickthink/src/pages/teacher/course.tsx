@@ -253,9 +253,9 @@ export function Input(props: {
         <button
           className={`${
             isError || value.length === 0
-              ? "bg-blue-200 text-gray-100"
-              : "text-white hover:bg-blue-400"
-          } rounded-lg bg-blue-300 px-4 py-2 transition-all`}
+              ? "bg-blue-100"
+              : "bg-blue-300 hover:bg-blue-400"
+          } rounded-lg px-4 py-2 font-bold text-white transition-all`}
           onClick={() => {
             if (!isError) {
               handleSubmit(value);
@@ -383,7 +383,7 @@ export function TestList() {
     return;
   }
 
-  const { data, error, isError, isLoading } =
+  const { data, error, isError, isLoading, refetch } =
     api.courses.getCourseTests.useQuery({ course_id: selectedCourse.id });
   const {
     data: teacherTests,
@@ -391,7 +391,35 @@ export function TestList() {
     isError: teacherIsError,
     isLoading: teacherIsLoading,
   } = api.courses.getTests.useQuery();
+  const testAdd = api.courses.addTestsToCourse.useMutation({
+    onSuccess: () => {
+      console.log("something");
+      refetch();
+      setIsAdding(false);
+    },
+  });
+  const testRemove = api.courses.removeTestFromCourse.useMutation({
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
   const [isAdding, setIsAdding] = useState(false);
+
+  function addTests(tests: TestType[]) {
+    if (!selectedCourse) {
+      return;
+    }
+    testAdd.mutate({ course_id: selectedCourse.id, tests: tests });
+  }
+
+  function removeTest(test: TestType) {
+    if (!selectedCourse) {
+      return;
+    }
+    testRemove.mutate({ test_id: test.id });
+  }
+
   return (
     <div className="">
       {isLoading ? (
@@ -403,12 +431,19 @@ export function TestList() {
           ) : (
             <>
               <div>
+                <h1 className="text-xl font-bold">Tests</h1>
                 {data.length === 0 ? (
                   <>No tests found in this course</>
                 ) : (
                   <>
                     {data.map((test) => {
-                      return <Test test={test} />;
+                      return (
+                        <Test
+                          key={test.id}
+                          test={test}
+                          handleDelete={removeTest}
+                        />
+                      );
                     })}
                   </>
                 )}
@@ -431,7 +466,10 @@ export function TestList() {
                             {teacherIsError ? (
                               <>An error ocurred, {teacherError.message}</>
                             ) : (
-                              <TestSelection tests={teacherTests} />
+                              <TestSelection
+                                tests={teacherTests}
+                                handleTestAdding={addTests}
+                              />
                             )}
                           </>
                         )}
@@ -448,14 +486,61 @@ export function TestList() {
   );
 }
 
-export function Test(props: { test: TestType }) {
-  const test = props.test;
+export function Test(props: {
+  test: TestType;
+  handleDelete: (test: TestType) => {};
+}) {
+  const { test, handleDelete } = props;
+  const [gettingRemoved, setGettingRemoved] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+
   return (
-    <div className="flex w-full flex-col rounded bg-white p-3 shadow">
-      <h1 className="font-bold">{test.title}</h1>
-      <div>
-        <p className="font-light">{test.description}</p>
+    <div
+      className={`${
+        gettingRemoved ? "opacity-80" : ""
+      } flex flex-col gap-2 rounded-lg bg-white p-3 shadow outline outline-1 outline-gray-200`}
+    >
+      <div className="flex w-full flex-row items-center justify-between ">
+        <div className="flex flex-col">
+          <h1 className="font-bold">{test.title}</h1>
+          <p className="font-light">{test.description}</p>
+        </div>
+        <button className="h-7 w-7">
+          <img
+            src={"/minus_icon.svg"}
+            alt="Delete"
+            className="fill-[#1A2643] object-contain"
+            onClick={() => {
+              setIsRemoving(!isRemoving);
+            }}
+          />
+        </button>
       </div>
+      {isRemoving ? (
+        <div className="flex w-full flex-row justify-between">
+          <p>Are you sure you want to remove this test from this course?</p>
+          <section className="flex flex-row justify-between gap-3">
+            <button
+              className="hover: rounded-lg bg-[#d47979] px-4 py-1 text-white transition-all hover:bg-[#bb4343]"
+              onClick={() => {
+                handleDelete(test);
+                setIsRemoving(false);
+                setGettingRemoved(true);
+              }}
+            >
+              Yes
+            </button>
+            <button
+              className="rounded-lg bg-white px-4 py-1 text-[#1A2643] outline outline-1 outline-gray-300 transition-all hover:bg-gray-200"
+              onClick={() => {
+                setIsRemoving(false);
+              }}
+            >
+              Cancel
+            </button>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -505,7 +590,7 @@ export function TestSelection(props: {
         );
       })}
       <button
-        className="w-full rounded-lg bg-blue-400 py-2 text-white hover:bg-blue-500"
+        className="w-full rounded-lg bg-blue-400 py-2 text-white transition-all hover:bg-blue-500"
         onClick={() => {
           handleTestAdding(selectedTests);
         }}
@@ -535,10 +620,12 @@ export function SelectTest(props: {
       }}
     >
       <div className="flex flex-col justify-between">
-        <h1 className={`font-bold`}>{test.title}</h1>
-        <p className="text-sm font-light">
-          Published on {test.publishedAt?.toLocaleDateString()}
-        </p>
+        <div>
+          <h1 className={`font-bold`}>{test.title}</h1>
+          <p className="text-sm font-light">
+            Published on {test.publishedAt?.toLocaleDateString()}
+          </p>
+        </div>
       </div>
     </div>
   );

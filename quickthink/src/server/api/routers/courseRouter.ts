@@ -5,14 +5,37 @@ import {
   authenticatedProcedure,
   teacherProcedure,
 } from "../trpc";
-import { courses, tests, user_courses, users } from "~/drizzle/schema";
-import { and, eq } from "drizzle-orm";
+import { ZodTest, courses, tests, user_courses, users } from "~/drizzle/schema";
+import { and, eq, isNull, not } from "drizzle-orm";
 import test from "node:test";
 import { TRPCError } from "@trpc/server";
 import { db } from "~/server/db";
 import { contextProps } from "@trpc/react-query/shared";
 
 export const courseRouter = createTRPCRouter({
+  removeTestFromCourse: publicProcedure
+    .input(z.object({ test_id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.db
+        .update(tests)
+        .set({ courseId: null })
+        .where(eq(tests.id, input.test_id));
+    }),
+  addTestsToCourse: publicProcedure
+    .input(z.object({ course_id: z.string().uuid(), tests: z.array(ZodTest) }))
+    .mutation(async ({ ctx, input }) => {
+      const updatedTests = input.tests.map(async (test) => {
+        await ctx.db
+          .update(tests)
+          .set({ courseId: input.course_id })
+          .where(and(eq(tests.id, test.id), isNull(tests.courseId)))
+          .returning();
+      });
+      const update = await Promise.all(updatedTests).then(() => {
+        return updatedTests;
+      });
+      return update;
+    }),
   getTests: publicProcedure.query(async ({ ctx, input }) => {
     return await ctx.db.select().from(tests);
   }),
