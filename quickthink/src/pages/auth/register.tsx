@@ -66,7 +66,7 @@ export function RegisterForm() {
     });
   }
   return (
-    <div className="max-w-xl flex-col rounded bg-[#1A2643] p-5 text-white shadow-lg sm:w-[50%]">
+    <div className="max-w-xl flex-col overflow-y-scroll rounded bg-[#1A2643] p-5 text-white shadow-lg sm:w-[50%] ">
       <h1 className="text-3xl font-bold">Sign up to QuickThink</h1>
       {isValid ? (
         ""

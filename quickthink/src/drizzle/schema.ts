@@ -51,7 +51,7 @@ export const tests = pgTable("tests", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   title: text("title").notNull().default(""),
   description: text("description"),
-  organizationId: uuid("organization_id").references(() => organization.id),
+  organizationId: uuid("organization_id").references(() => organizations.id),
   timeLength: integer("time_length").default(300),
   publishedAt: timestamp("published_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -96,10 +96,28 @@ export const results = pgTable("results", {
   grade: real("grade"),
 });
 
+export const result_answers = pgTable("result_answers", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  resultId: uuid("result_id").references(() => results.id, {
+    onDelete: "cascade",
+  }),
+  questionId: integer("question_id").references(() => questions.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
+  answerId: integer("answer_id").references(() => answers.id, {
+    onDelete: "cascade",
+  }),
+});
+
 export const sessions = pgTable("sessions", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
-  testId: uuid("test_id").references(() => tests.id),
-  userId: uuid("user_id").references(() => users.id),
+  testId: uuid("test_id")
+    .references(() => tests.id)
+    .notNull(),
+  userId: uuid("user_id")
+    .references(() => users.id)
+    .notNull(),
   startTime: timestamp("start_time").defaultNow(),
 });
 
@@ -109,7 +127,7 @@ export const user_org = pgTable("user_organization", {
     .references(() => users.id)
     .notNull(),
   organizationId: uuid("organization_id")
-    .references(() => organization.id)
+    .references(() => organizations.id)
     .notNull(),
 });
 
@@ -126,7 +144,7 @@ export const user_courses = pgTable("user_courses", {
 export const courses = pgTable("courses", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   creatorId: uuid("user_id").references(() => users.id),
-  organzationId: uuid("organization_id").references(() => organization.id),
+  organzationId: uuid("organization_id").references(() => organizations.id),
   name: text("course_name").notNull(),
   description: text("description"),
 });
@@ -151,4 +169,4 @@ export type AnswerType = typeof answers.$inferInsert;
 export type ResultInsert = typeof results.$inferInsert;
 export type CourseType = typeof courses.$inferSelect;
 export type UserType = typeof users.$inferSelect;
-export type OrganizationType = typeof organization.$inferSelect;
+export type OrganizationType = typeof organizations.$inferSelect;

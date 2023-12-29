@@ -132,7 +132,7 @@ export function YourTests(props: { children?: ReactNode }) {
   return (
     <div className="flex h-screen w-full border border-black">
       <div className="sticky h-full w-[25%] bg-[#EDF0FF] p-3">
-        <h1 className="pb-4 text-xl font-bold">Your Tests</h1>
+        <h1 className="text-xl font-bold">Your Tests</h1>
         <div className="h-[95%] w-full overflow-y-scroll p-2">
           {isLoading ? (
             <>Loading...</>
@@ -145,17 +145,42 @@ export function YourTests(props: { children?: ReactNode }) {
                 </>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {testStates.map((value) => {
-                    return (
-                      <TestInfoContainer
-                        key={value.testData.id}
-                        test={value.testData}
-                        selected={value.testData.id === currentTestId}
-                      />
-                    );
-                  })}
+                  <div className="flex flex-col gap-1">
+                    <h1 className="font-bold">Drafts</h1>
+                    {testStates.filter(
+                      (value) => value.testData.visibility === "draft",
+                    ).length === 0 && <p>No drafts found</p>}
+                  </div>
+                  {testStates
+                    .filter((value) => value.testData.visibility === "draft")
+                    .map((value) => {
+                      return (
+                        <TestInfoContainer
+                          key={value.testData.id}
+                          test={value.testData}
+                          selected={value.testData.id === currentTestId}
+                        />
+                      );
+                    })}
+                  <div className="flex flex-col gap-1">
+                    <h1 className="font-bold">Published</h1>
+                    {testStates.filter(
+                      (value) => value.testData.visibility === "public",
+                    ).length === 0 && <p>No drafts found</p>}
+                  </div>
+                  {testStates
+                    .filter((value) => value.testData.visibility === "public")
+                    .map((value) => {
+                      return (
+                        <TestInfoContainer
+                          key={value.testData.id}
+                          test={value.testData}
+                          selected={value.testData.id === currentTestId}
+                        />
+                      );
+                    })}
                   <button
-                    className="w-full rounded-lg bg-white p-2 text-center text-blue-800 outline outline-1 outline-blue-800"
+                    className="w-full rounded-lg bg-white p-2 text-center text-blue-800 outline outline-1 outline-blue-800 transition-all hover:font-bold"
                     onClick={addTest}
                   >
                     Add Test
@@ -218,7 +243,7 @@ export function TestInfoContainer(props: {
         <p className="truncate font-light">{test.description}</p>
         <div className="flex items-center justify-between">
           <h1 className="italic">
-            Published on {test.publishedAt?.getDay().toString()}
+            Created on {test.publishedAt?.getDay().toString()}
             {"/"}
             {test.publishedAt?.getMonth().toString()}
             {"/"}
@@ -254,6 +279,7 @@ export function TestTopBar() {
     isError,
     data,
     error,
+    refetch,
     isPreviousData,
     isSuccess,
     isRefetching,
@@ -273,6 +299,11 @@ export function TestTopBar() {
   const [title, setTitle] = useState(currentTest.title);
   const [description, setDescription] = useState(currentTest.description);
   const [isDeleting, setIsDeleting] = useState(false);
+  const publishTest = api.teacher.publishTest.useMutation({
+    onSuccess: () => {
+      location.replace(location.href);
+    },
+  });
   const saveDraft = api.teacher.saveDraft.useMutation();
   const testDelete = api.teacher.deleteTest.useMutation({
     onSuccess: (value) => {
@@ -344,6 +375,20 @@ export function TestTopBar() {
     });
   }
 
+  function handlePublishing() {
+    if (currentTestState.length === 0) {
+      return;
+    }
+    if (currentTestState.length === 0) {
+      return;
+    }
+    const currentTestData = currentTestState[0];
+    publishTest.mutate({
+      test: currentTestData?.testData!,
+      draft: currentTestData?.state!,
+    });
+  }
+
   return (
     <div className="rounded-lg border bg-white">
       <div className="flex flex-row items-center justify-between gap-2 p-4">
@@ -384,9 +429,9 @@ export function TestTopBar() {
             ) : saveDraft.isSuccess ? (
               <div>Saved succesfully ✓</div>
             ) : saveDraft.isIdle ? (
-              <div>Save Draft</div>
+              <div>Save Changes</div>
             ) : (
-              <div>Save Draft</div>
+              <div>Save Changes</div>
             )}
           </button>
           <div className="flex flex-row gap-5">
@@ -398,7 +443,9 @@ export function TestTopBar() {
             >
               Delete Test
             </button>
-            <button className="">Publish</button>
+            <button className="" onClick={handlePublishing}>
+              Publish
+            </button>
           </div>
         </ul>
         {isDeleting ? (
@@ -578,7 +625,7 @@ export function QuestionsSection() {
       </Droppable>
       <div className="flex w-full flex-row justify-center p-2">
         <button
-          className="w-full rounded-lg bg-white p-2 text-center text-blue-300 outline outline-1 outline-blue-300"
+          className="w-full rounded-lg bg-white p-2 text-center text-blue-300 outline outline-1 outline-blue-300 transition-all hover:font-bold"
           onClick={addQuestion}
         >
           Add Question
@@ -601,7 +648,7 @@ export function AnswerSection(props: {
         return <Answer key={answer.id} answer={answer} />;
       })}
       <button
-        className="w-full rounded-lg bg-white p-2 text-center text-blue-500 outline outline-1 outline-blue-200"
+        className="w-full rounded-lg bg-white p-2 text-center text-blue-500 outline outline-1 outline-blue-200 hover:font-bold"
         onClick={() => {
           props.handleAnswerAdd(props.questionId);
         }}

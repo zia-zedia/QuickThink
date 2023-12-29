@@ -33,10 +33,10 @@ export default function Home() {
               <button className=" text-white ">Login</button>
             </Link>
             <Link
-              href={"/test"}
+              href={"/auth/register"}
               className="flex-grow rounded px-3 py-1 text-center text-lg text-[#7ea1ed] outline outline-1 outline-[#7ea1ed] transition-all hover:-translate-y-[2px]"
             >
-              <button className="">Take a Test</button>
+              <button className="">Register</button>
             </Link>
           </div>
         </HeroText>

@@ -469,7 +469,7 @@ export function SubmitTest(props: { enabled?: boolean; onSubmit: () => void }) {
   const onSubmit = props.onSubmit;
   return (
     <button
-      className={`rounded bg-white px-3 py-2 text-black hover:cursor-pointer ${
+      className={`rounded bg-white px-3 py-2 text-black transition-all hover:cursor-pointer hover:font-bold ${
         enabled ? "" : "text-gray-500"
       }`}
       disabled={!enabled}

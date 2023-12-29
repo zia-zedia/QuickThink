@@ -229,10 +229,10 @@ export function YourOrganizations(props: {
         </>
       )}
       <button
-        className="w-full rounded-lg bg-white p-2 text-center text-blue-800 outline outline-1 outline-blue-800"
+        className="w-full rounded-lg bg-white p-2 text-center text-blue-800 outline outline-1 outline-blue-800 transition-all hover:font-bold"
         onClick={handleOrganizationAdd}
       >
-        Add organization
+        Add Organization
       </button>
     </div>
   );
