@@ -90,9 +90,11 @@ export const answers = pgTable("answers", {
 export const results = pgTable("results", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   testId: uuid("test_id")
-    .references(() => tests.id)
+    .references(() => tests.id, { onDelete: "cascade" })
     .notNull(),
-  studentId: uuid("student_id").references(() => users.id),
+  studentId: uuid("student_id").references(() => users.id, {
+    onDelete: "cascade",
+  }),
   grade: real("grade"),
 });
 
@@ -113,32 +115,32 @@ export const result_answers = pgTable("result_answers", {
 export const sessions = pgTable("sessions", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   testId: uuid("test_id")
-    .references(() => tests.id)
+    .references(() => tests.id, { onDelete: "cascade" })
     .notNull(),
   userId: uuid("user_id")
     .references(() => users.id)
     .notNull(),
   startTime: timestamp("start_time").defaultNow(),
-  endTime: timestamp("end_time").notNull()
+  endTime: timestamp("end_time").notNull(),
 });
 
 export const user_org = pgTable("user_organization", {
   id: serial("id").primaryKey().notNull(),
   userId: uuid("user_id")
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
   organizationId: uuid("organization_id")
-    .references(() => organizations.id)
+    .references(() => organizations.id, { onDelete: "cascade" })
     .notNull(),
 });
 
 export const user_courses = pgTable("user_courses", {
   id: serial("id").primaryKey().notNull(),
   userId: uuid("user_id")
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
   courseId: uuid("course_id")
-    .references(() => courses.id)
+    .references(() => courses.id, { onDelete: "cascade" })
     .notNull(),
 });
 

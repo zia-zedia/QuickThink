@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { api } from "~/utils/api";
 import { z } from "zod";
+import { check } from "drizzle-orm/mysql-core";
 
 export default function LoginPage() {
   return (

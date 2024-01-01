@@ -26,6 +26,20 @@ import { db } from "~/server/db";
 import { contextProps } from "@trpc/react-query/shared";
 
 export const teacherRouter = createTRPCRouter({
+  getTestIntroWithId: authenticatedProcedure
+    .input(z.object({ test_id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const db = ctx.db;
+      const test = await db
+        .select()
+        .from(tests)
+        .where(eq(tests.id, input.test_id));
+
+      if (test.length > 0) {
+        return { testData: test[0] };
+      }
+      throw new TRPCError({ code: "NOT_FOUND" });
+    }),
   publishTest: publicProcedure
     .input(
       z.object({
@@ -46,6 +60,7 @@ export const teacherRouter = createTRPCRouter({
         .set({
           title: input.test.title,
           description: input.test.description,
+          timeLength: input.test.timeLength,
           visibility: "public",
         })
         .where(eq(tests.id, input.test.id!));
@@ -156,7 +171,7 @@ export const teacherRouter = createTRPCRouter({
     return await ctx.db.select().from(courses);
     //.where(eq(courses.creatorId, ctx.user?.id!));
   }),
-  getTestList: publicProcedure.query(async ({ ctx }) => {
+  getTestList: authenticatedProcedure.query(async ({ ctx }) => {
     return await ctx.db
       .select()
       .from(tests)
@@ -207,7 +222,11 @@ export const teacherRouter = createTRPCRouter({
 
       await db
         .update(tests)
-        .set({ title: input.test.title, description: input.test.description })
+        .set({
+          title: input.test.title,
+          description: input.test.description,
+          timeLength: input.test.timeLength,
+        })
         .where(eq(tests.id, input.test.id!));
 
       input.draft.map(async (QnA, index) => {

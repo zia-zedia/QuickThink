@@ -6,6 +6,26 @@ import { Card, CardContainer, Section } from "..";
 import { Navbar } from "~/components/Navbar";
 
 export default function StudentLayout(props: { children: ReactNode }) {
+  const {
+    isLoading,
+    isError,
+    data: checkLogin,
+    error,
+  } = api.auth.isLoggedIn.useQuery();
+
+  if (isLoading) {
+    return;
+  }
+
+  if (isError) {
+    return <>An error occurred: {error.message}</>;
+  }
+
+  if (!(checkLogin?.loggedIn && checkLogin.role === "student")) {
+    window.location.href = "/";
+    return;
+  }
+
   return (
     <>
       <div className="flex h-screen w-full bg-[#EDF0FF]">
@@ -44,7 +64,8 @@ export function AllTests() {
           <h1 className="pb-4 text-3xl font-bold">Test List</h1>
           <div>
             <div className="flex w-full flex-row gap-2 overflow-x-scroll px-1 py-2">
-              {data.map((test) => {
+              {data.map((testData) => {
+                const test = testData.tests;
                 return (
                   <div className="flex w-full min-w-[30%] flex-col justify-between rounded-lg bg-white p-3 outline outline-1 outline-[#CADBFF] transition-all hover:-translate-y-1 hover:shadow-md hover:shadow-[#CADBFF] hover:outline-[#849EFA]">
                     <div>

@@ -40,6 +40,14 @@ export default function CoursePage() {
   });
   const courseUpdate = api.courses.updateCourseData.useMutation({
     onSuccess: () => {
+      setSelectedCourse(selectedCourse);
+      refetch();
+    },
+  });
+
+  const courseDelete = api.courses.deleteCourse.useMutation({
+    onSuccess: () => {
+      setSelectedCourse(null);
       refetch();
     },
   });
@@ -56,6 +64,15 @@ export default function CoursePage() {
       course_id: selectedCourse.id,
       name: course.name,
       description: course.description ? course.description : "",
+    });
+  }
+
+  function deleteCourse(course: CourseType) {
+    if (!selectedCourse) {
+      return;
+    }
+    courseDelete.mutate({
+      course_id: selectedCourse.id,
     });
   }
 
@@ -95,6 +112,7 @@ export default function CoursePage() {
                   <CourseTopBar
                     course={selectedCourse}
                     handleCourseUpdate={updateCourse}
+                    handleCourseDelete={deleteCourse}
                   />
                   <div className="p-2">
                     <div className="flex flex-col gap-3">
@@ -278,10 +296,12 @@ export function CourseInfoContainer(props: {
 export function CourseTopBar(props: {
   course: CourseType;
   handleCourseUpdate: (course: CourseType) => void;
+  handleCourseDelete: (course: CourseType) => void;
 }) {
-  const { course, handleCourseUpdate } = props;
+  const { course, handleCourseUpdate, handleCourseDelete } = props;
   const [name, setName] = useState(course.name);
   const [description, setDescription] = useState(course.description);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { selectedCourse } = useContext(CoursePageContext);
   const edited = name !== course.name || description !== course.description;
 
@@ -296,41 +316,78 @@ export function CourseTopBar(props: {
   return (
     <>
       <div className="rounded-lg border bg-white">
-        <div className="flex flex-row items-center justify-between gap-2 p-4">
-          <div className="flex flex-col">
-            <input
-              className="bg-none text-lg font-bold text-[#1A2643] outline-none"
-              value={name}
-              onChange={(event) => {
-                setName(event.target.value);
-              }}
-            />
-            <input
-              className="text-sm outline-none"
-              value={description ? description : ""}
-              onChange={(event) => {
-                setDescription(event.target.value);
-              }}
-            />
-          </div>
-          {edited && (
-            <button
-              className="rounded-lg bg-gray-300 px-3 py-1 text-white outline outline-1 outline-gray-100 transition-all hover:bg-gray-400 hover:outline-gray-300"
-              onClick={() => {
-                handleCourseUpdate({
-                  id: course.id,
-                  name: name,
-                  description: description,
-                  creatorId: null,
-                  organzationId: null,
-                });
-              }}
-            >
-              Save Changes
+        <div className="flex w-full flex-col">
+          <div className="flex flex-row items-center justify-between gap-2 p-4">
+            <div className="flex w-full flex-col">
+              <input
+                className="bg-none text-lg font-bold text-[#1A2643] outline-none"
+                value={name}
+                onChange={(event) => {
+                  setName(event.target.value);
+                }}
+              />
+              <input
+                className="text-sm outline-none"
+                value={description ? description : ""}
+                onChange={(event) => {
+                  setDescription(event.target.value);
+                }}
+              />
+            </div>
+            {edited && (
+              <button
+                className="rounded-lg bg-gray-300 px-3 py-1 text-white outline outline-1 outline-gray-100 transition-all hover:bg-gray-400 hover:outline-gray-300"
+                onClick={() => {
+                  handleCourseUpdate({
+                    id: course.id,
+                    name: name,
+                    description: description,
+                    creatorId: null,
+                    organzationId: null,
+                  });
+                }}
+              >
+                Save Changes
+              </button>
+            )}
+            <button className="text-lg">
+              <div className="h-7 w-7">
+                <img
+                  src={"/trash_icon.svg"}
+                  alt="Delete"
+                  className="fill-[#1A2643] object-contain"
+                  onClick={() => {
+                    setIsDeleting(!isDeleting);
+                  }}
+                />
+              </div>
             </button>
-          )}
+          </div>
+          {isDeleting ? (
+            <div className="flex w-full flex-row justify-between p-3">
+              <p>Delete this course? This is irreversible.</p>
+              <section className="flex flex-row justify-between gap-3">
+                <button
+                  className="hover: rounded-lg bg-[#d47979] px-4 py-1 text-white transition-all hover:bg-[#bb4343]"
+                  onClick={() => {
+                    handleCourseDelete(course);
+                  }}
+                >
+                  Yes
+                </button>
+                <button
+                  className="rounded-lg bg-white px-4 py-1 text-[#1A2643] transition-all hover:bg-gray-200"
+                  onClick={() => {
+                    setIsDeleting(false);
+                  }}
+                >
+                  Cancel
+                </button>
+              </section>
+            </div>
+          ) : null}
+          <ul className="flex flex-row justify-between rounded-b-lg bg-[#1A2643] px-3 py-1 text-white"></ul>
         </div>
-        <ul className="flex flex-row justify-between rounded-b-lg bg-[#1A2643] px-3 py-1 text-white"></ul>
       </div>
     </>
   );
@@ -407,7 +464,6 @@ export function ParticipantList(props: {
   handleParticipantDelete: (participant: UserType) => void;
 }) {
   const { participants, handleParticipantDelete } = props;
-
   return (
     <>
       <div className="flex flex-col gap-2 py-2">
@@ -562,7 +618,7 @@ export function TestList() {
                 )}
                 <div className="relative inline-block w-full">
                   <button
-                    className="w-full rounded-lg bg-white p-2 text-center text-blue-300 outline outline-1 outline-blue-300"
+                    className="w-full rounded-lg bg-white p-2 text-center text-blue-300 outline outline-1 outline-blue-300 transition-all hover:font-bold"
                     onClick={() => {
                       setIsAdding(!isAdding);
                     }}
@@ -703,7 +759,7 @@ export function TestSelection(props: {
         );
       })}
       <button
-        className="w-full rounded-lg bg-blue-400 py-2 text-white transition-all hover:bg-blue-500"
+        className="w-full rounded-lg bg-blue-400 py-2 text-white transition-all hover:bg-blue-500 hover:font-bold"
         onClick={() => {
           handleTestAdding(selectedTests);
         }}

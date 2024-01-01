@@ -13,7 +13,25 @@ import { db } from "~/server/db";
 import { contextProps } from "@trpc/react-query/shared";
 
 export const courseRouter = createTRPCRouter({
-  updateCourseData: publicProcedure
+  deleteCourse: teacherProcedure
+    .input(z.object({ course_id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const course = await ctx.db
+        .select({ userId: courses.creatorId })
+        .from(courses)
+        .where(eq(courses.id, input.course_id));
+      if (ctx.user?.id !== course[0]?.userId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not the creator of this course",
+        });
+      }
+
+      return await ctx.db
+        .delete(courses)
+        .where(eq(courses.id, input.course_id));
+    }),
+  updateCourseData: teacherProcedure
     .input(
       z.object({
         course_id: z.string().uuid(),
@@ -22,6 +40,17 @@ export const courseRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const course = await ctx.db
+        .select({ userId: courses.creatorId })
+        .from(courses)
+        .where(eq(courses.id, input.course_id));
+      if (ctx.user?.id !== course[0]?.userId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not the creator of this course",
+        });
+      }
+
       return await ctx.db
         .update(courses)
         .set({ name: input.name, description: input.description })
@@ -119,7 +148,17 @@ export const courseRouter = createTRPCRouter({
         });
       }
 
-      if (user.length >= 1) {
+      const courseParticipants = await ctx.db
+        .select({ userId: user_courses.userId })
+        .from(user_courses)
+        .where(
+          and(
+            eq(user_courses.courseId, input.course_id),
+            eq(user_courses.userId, user[0]?.id!),
+          ),
+        );
+
+      if (courseParticipants.length >= 1) {
         throw new TRPCError({
           code: "CONFLICT",
           message: "User already added.",

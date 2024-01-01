@@ -3,6 +3,7 @@ import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { UserInsert, organizations, users } from "~/drizzle/schema";
 import { eq } from "drizzle-orm";
+import { db } from "~/server/db";
 
 export const registrationSchema = z.object({
   email: z.string().email(),
@@ -101,10 +102,13 @@ export const authRouter = createTRPCRouter({
     const supabase = ctx.supabase;
     const user = await supabase.auth.getUser();
     if (user.data.user != null) {
-      console.log(user.data.user);
-      return true;
+      const role = await ctx.db
+        .select({ role: users.role })
+        .from(users)
+        .where(eq(users.authId, user.data.user.id));
+      return { loggedIn: true, role: role[0]?.role! };
     }
     console.log(user.data.user);
-    return false;
+    return { loggedIn: false, role: null };
   }),
 });
