@@ -36,28 +36,36 @@ export function TestPage() {
   }
 
   const [timeLeft, setTimeLeft] = useState<TimeType | null>(null);
-  const sessionId = localStorage.getItem("session_id");
   const [testStarted, setTestStarted] = useState(false);
   const startSession = api.tests.startSession.useMutation({
     onSuccess: (value) => {
       setTestStarted(true);
       setTimeLeft(value.timer);
-      localStorage.setItem("session_id", value.session[0]?.id!);
-      console.log(sessionId);
       console.log(timeLeft);
       console.log("test started");
     },
   });
-  const { isLoading, isError, data, error, isSuccess } =
-    api.tests.handleSession.useQuery({
-      sessionId: sessionId,
-      test_id: test_id,
-    });
+  const {
+    isLoading,
+    isError,
+    data: session,
+    error,
+    isSuccess,
+  } = api.tests.checkSession.useQuery({
+    test_id: test_id,
+  });
+
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+    setTimeLeft(session.timer);
+  }, [session]);
 
   if (isLoading) {
     return <Loading />;
   }
-  if (isError && !(error.data?.code === "NOT_FOUND")) {
+  if (isError) {
     return <Error message={error.message} code={error.data?.code} />;
   }
 
@@ -82,12 +90,11 @@ export function TestPage() {
   }
 
   function HandleTestStart() {
-    if (!sessionId || error?.data?.code === "NOT_FOUND") {
+    if (session?.session.length! === 0) {
       startSession.mutate({ test_id: test_id! });
+      return;
     }
     setTestStarted(true);
-    console.log(timeLeft);
-    return;
   }
 
   return (
@@ -104,7 +111,7 @@ export function TestPage() {
           testStarted={testStarted}
           startOnClick={HandleTestStart}
           leaveOnClick={HandleLeaveTest}
-          timeLeft={timeLeft ? timeLeft : data?.timer}
+          timeLeft={timeLeft!}
         />
         {testStarted ? <Test testId={test_id} /> : null}
       </div>

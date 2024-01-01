@@ -119,6 +119,7 @@ export const sessions = pgTable("sessions", {
     .references(() => users.id)
     .notNull(),
   startTime: timestamp("start_time").defaultNow(),
+  endTime: timestamp("end_time").notNull()
 });
 
 export const user_org = pgTable("user_organization", {

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import { UserInsert, organization, users } from "~/drizzle/schema";
+import { UserInsert, organizations, users } from "~/drizzle/schema";
 import { eq } from "drizzle-orm";
 
 export const registrationSchema = z.object({
@@ -53,8 +53,24 @@ export const authRouter = createTRPCRouter({
         email: input.authData.email,
         password: input.authData.password,
       });
-      console.log(data);
-      console.log(error);
+      const usernameExists = await ctx.db
+        .select()
+        .from(users)
+        .where(eq(users.userName, input.userData.userName));
+
+      if (usernameExists.length > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Username already used",
+        });
+      }
+
+      if (error) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: error.message,
+        });
+      }
       if (data.user == null) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
@@ -67,11 +83,10 @@ export const authRouter = createTRPCRouter({
           role: input.userData.role,
           authId: data.user?.id,
         })
-        .onConflictDoNothing()
         .returning();
 
       if (newUser[0]?.role === "teacher") {
-        await ctx.db.insert(organization).values({
+        await ctx.db.insert(organizations).values({
           name: `${newUser[0].userName}'s organization`,
           creatorId: newUser[0].id,
         });
