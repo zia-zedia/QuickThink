@@ -557,6 +557,7 @@ export function TestList() {
     error: teacherError,
     isError: teacherIsError,
     isLoading: teacherIsLoading,
+    refetch: teacherRefetch,
   } = api.courses.getTests.useQuery({ course_id: selectedCourse.id });
   const testAdd = api.courses.addTestsToCourse.useMutation({
     onSuccess: () => {
@@ -570,6 +571,11 @@ export function TestList() {
       refetch();
     },
   });
+
+  useEffect(() => {
+    refetch();
+    teacherRefetch();
+  }, [selectedCourse]);
 
   const [isAdding, setIsAdding] = useState(false);
 
