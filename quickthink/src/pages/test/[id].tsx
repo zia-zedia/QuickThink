@@ -50,7 +50,6 @@ export function TestPage() {
     isError,
     data: session,
     error,
-    isSuccess,
   } = api.tests.checkSession.useQuery({
     test_id: test_id,
   });
@@ -161,7 +160,7 @@ export function TestStartModal(props: {
           </div>
           <div>
             <p className="font-light">
-              Published on: {data.testData?.publishDate?.toDateString()}
+              Published on: {data.testData?.publishedAt?.toDateString()}
             </p>
           </div>
         </div>

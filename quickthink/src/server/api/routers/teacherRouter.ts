@@ -40,7 +40,7 @@ export const teacherRouter = createTRPCRouter({
       }
       throw new TRPCError({ code: "NOT_FOUND" });
     }),
-  publishTest: publicProcedure
+  publishTest: teacherProcedure
     .input(
       z.object({
         test: ZodInsertTest,
@@ -54,6 +54,17 @@ export const teacherRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       const db = ctx.db;
+
+      const test = await db
+        .select()
+        .from(tests)
+        .where(eq(tests.id, input.test.id!));
+      if (test[0]?.teacherId != ctx.user?.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not the creator of this test.",
+        });
+      }
 
       await db
         .update(tests)
@@ -139,15 +150,26 @@ export const teacherRouter = createTRPCRouter({
         }
       });
     }),
-  deleteTest: publicProcedure
+  deleteTest: teacherProcedure
     .input(z.object({ test_id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      const test = await db
+        .select()
+        .from(tests)
+        .where(eq(tests.id, input.test_id));
+      if (test[0]?.teacherId != ctx.user?.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not the creator of this test.",
+        });
+      }
+
       return await ctx.db
         .delete(tests)
         .where(eq(tests.id, input.test_id))
         .returning();
     }),
-  addTest: publicProcedure.mutation(async ({ ctx }) => {
+  addTest: teacherProcedure.mutation(async ({ ctx }) => {
     return await ctx.db
       .insert(tests)
       .values({
@@ -155,10 +177,11 @@ export const teacherRouter = createTRPCRouter({
         description: "Describe your test here",
         visibility: "draft",
         difficulty: "EASY",
+        teacherId: ctx.user?.id!,
       })
       .returning();
   }),
-  getCourseDataWithId: publicProcedure
+  getCourseDataWithId: teacherProcedure
     .input(z.object({ course_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       const course = await ctx.db
@@ -167,37 +190,21 @@ export const teacherRouter = createTRPCRouter({
         .where(eq(courses.id, input.course_id));
       return { course: course[0] };
     }),
-  getCourses: publicProcedure.query(async ({ ctx }) => {
-    return await ctx.db.select().from(courses);
-    //.where(eq(courses.creatorId, ctx.user?.id!));
+  getCourses: teacherProcedure.query(async ({ ctx }) => {
+    return await ctx.db
+      .select()
+      .from(courses)
+      .where(eq(courses.creatorId, ctx.user?.id!));
   }),
-  getTestList: authenticatedProcedure.query(async ({ ctx }) => {
+  getTestList: teacherProcedure.query(async ({ ctx }) => {
     return await ctx.db
       .select()
       .from(tests)
-      .leftJoin(users, eq(tests.teacherId, users.id));
+      .where(eq(tests.teacherId, ctx.user?.id!));
   }),
-  deleteQuestion: publicProcedure
+  deleteQuestion: teacherProcedure
     .input(z.object({ questionId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      /*
-      const user = ctx.user;
-      console.log(user);
-      console.log(user?.role);
-
-      const test = await db
-        .select({ teacherId: tests.teacherId })
-        .from(tests)
-        .leftJoin(questions, eq(questions.testId, tests.id))
-        .where(eq(questions.id, input.questionId));
-
-      if (test.length === 0) {
-        throw new TRPCError({ code: "NOT_FOUND" });
-      }
-      if (!(test[0]?.teacherId === user?.id)) {
-        throw new TRPCError({ code: "UNAUTHORIZED" });
-      }
-      */
       await ctx.db.delete(questions).where(eq(questions.id, input.questionId));
     }),
   deleteAnswer: publicProcedure
@@ -205,7 +212,7 @@ export const teacherRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       await db.delete(answers).where(eq(answers.id, input.answerId));
     }),
-  saveDraft: publicProcedure
+  saveDraft: teacherProcedure
     .input(
       z.object({
         test: ZodInsertTest,
@@ -219,6 +226,17 @@ export const teacherRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       const db = ctx.db;
+
+      const test = await db
+        .select()
+        .from(tests)
+        .where(eq(tests.id, input.test.id!));
+      if (test[0]?.teacherId != ctx.user?.id!) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not the creator of this test.",
+        });
+      }
 
       await db
         .update(tests)
