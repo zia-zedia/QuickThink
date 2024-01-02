@@ -42,6 +42,12 @@ export default function OrganizationPage() {
         refetch();
       },
     });
+  const organizationDelete = api.organizations.deleteOrganization.useMutation({
+    onSuccess: () => {
+      setSelectedOrganization(null);
+      refetch();
+    },
+  });
 
   function addOrganization() {
     organizationAdd.mutate();
@@ -53,9 +59,37 @@ export default function OrganizationPage() {
     }
     organizationUpdate.mutate({
       organization_id: selectedOrganization.id,
-      name: organization.name,
-      description: organization.description ? organization.description : "",
+      name: organization.name!,
     });
+  }
+
+  function deleteOrganization(organization: OrganizationType) {
+    if (!selectedOrganization) {
+      return;
+    }
+    organizationDelete.mutate({
+      organization_id: selectedOrganization.id,
+    });
+  }
+
+  const {
+    isLoading: checkLoginIsLoading,
+    isError: checkLoginIsError,
+    data: checkLogin,
+    error: checkLoginError,
+  } = api.auth.isLoggedIn.useQuery();
+
+  if (checkLoginIsLoading) {
+    return;
+  }
+
+  if (checkLoginIsError) {
+    return <>An error occurred: {checkLoginError.message}</>;
+  }
+
+  if (!(checkLogin.loggedIn && checkLogin.role === "teacher")) {
+    window.location.href = "/";
+    return;
   }
 
   return (
@@ -99,6 +133,7 @@ export default function OrganizationPage() {
                   <OrganizationTopBar
                     organization={selectedOrganization}
                     handleOrganizationUpdate={updateOrganization}
+                    handleOrganizationDelete={deleteOrganization}
                   />
                   <div className="p-2">
                     <div className="flex flex-col gap-3">
@@ -284,9 +319,12 @@ export function OrganizationInfoContainer(props: {
 export function OrganizationTopBar(props: {
   organization: OrganizationType;
   handleOrganizationUpdate: (organization: OrganizationType) => void;
+  handleOrganizationDelete: (organization: OrganizationType) => void;
 }) {
-  const { organization, handleOrganizationUpdate } = props;
+  const { organization, handleOrganizationUpdate, handleOrganizationDelete } =
+    props;
   const [name, setName] = useState(organization.name);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { selectedOrganization } = useContext(OrganizationPageContext);
   const edited = name !== organization.name;
 
@@ -300,29 +338,67 @@ export function OrganizationTopBar(props: {
   return (
     <>
       <div className="rounded-lg border bg-white">
-        <div className="flex flex-row items-center justify-between gap-2 p-4">
-          <div className="flex flex-col">
-            <input
-              className="bg-none text-lg font-bold text-[#1A2643] outline-none"
-              value={name}
-              onChange={(event) => {
-                setName(event.target.value);
-              }}
-            />
-          </div>
-          {edited && (
-            <button
-              className="rounded-lg bg-gray-300 px-3 py-1 text-white outline outline-1 outline-gray-100 transition-all hover:bg-gray-400 hover:outline-gray-300"
-              onClick={() => {
-                handleOrganizationUpdate({
-                  id: organization.id,
-                  name: name,
-                });
-              }}
-            >
-              Save Changes
+        <div className="flex w-full flex-col">
+          <div className="flex flex-row items-center justify-between gap-2 p-4">
+            <div className="flex flex-col">
+              <input
+                className="bg-none text-lg font-bold text-[#1A2643] outline-none"
+                value={name ? name : ""}
+                onChange={(event) => {
+                  setName(event.target.value);
+                }}
+              />
+            </div>
+            {edited && (
+              <button
+                className="rounded-lg bg-gray-300 px-3 py-1 text-white outline outline-1 outline-gray-100 transition-all hover:bg-gray-400 hover:outline-gray-300"
+                onClick={() => {
+                  handleOrganizationUpdate({
+                    id: organization.id,
+                    name: name,
+                    creatorId: null,
+                  });
+                }}
+              >
+                Save Changes
+              </button>
+            )}
+            <button className="text-lg">
+              <div className="h-7 w-7">
+                <img
+                  src={"/trash_icon.svg"}
+                  alt="Delete"
+                  className="fill-[#1A2643] object-contain"
+                  onClick={() => {
+                    setIsDeleting(!isDeleting);
+                  }}
+                />
+              </div>
             </button>
-          )}
+          </div>
+          {isDeleting ? (
+            <div className="flex w-full flex-row justify-between p-3">
+              <p>Delete this organization? This is irreversible.</p>
+              <section className="flex flex-row justify-between gap-3">
+                <button
+                  className="hover: rounded-lg bg-[#d47979] px-4 py-1 text-white transition-all hover:bg-[#bb4343]"
+                  onClick={() => {
+                    handleOrganizationDelete(organization);
+                  }}
+                >
+                  Yes
+                </button>
+                <button
+                  className="rounded-lg bg-white px-4 py-1 text-[#1A2643] transition-all hover:bg-gray-200"
+                  onClick={() => {
+                    setIsDeleting(false);
+                  }}
+                >
+                  Cancel
+                </button>
+              </section>
+            </div>
+          ) : null}
         </div>
         <ul className="flex flex-row justify-between rounded-b-lg bg-[#1A2643] px-3 py-1 text-white"></ul>
       </div>

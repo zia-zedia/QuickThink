@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { api } from "~/utils/api";
 import { z } from "zod";
+import { check } from "drizzle-orm/mysql-core";
 
 export default function LoginPage() {
   return (
@@ -31,7 +32,12 @@ export function LoginForm() {
     message: string;
   }>({ isValid: true, message: "" });
   const [message, setMessage] = useState("");
-  const { isLoading, isError, data, error } = api.auth.isLoggedIn.useQuery();
+  const {
+    isLoading,
+    isError,
+    data: checkLogin,
+    error,
+  } = api.auth.isLoggedIn.useQuery();
 
   useEffect(() => {
     const emailValid = z.string().email().safeParse(email);
@@ -48,11 +54,12 @@ export function LoginForm() {
 
   const loginUser = api.auth.login.useMutation({
     onSuccess: (data) => {
-      if (data.user?.role === "student") {
-        window.location.href = "/student";
-      } else if (data.user?.role === "teacher") {
-        window.location.href = "/teacher";
-      }
+      if (data.session)
+        if (data.user?.role === "student") {
+          window.location.href = "/student";
+        } else if (data.user?.role === "teacher") {
+          window.location.href = "/teacher";
+        }
     },
     onError: (error) => {
       setMessage(`Login Failed, ${error.message}`);
@@ -63,9 +70,16 @@ export function LoginForm() {
     return <div>Loading...</div>;
   }
 
-  if (data === true) {
-    console.log(data);
-    window.location.href = "/student";
+  if (isError) {
+    return <div>An error ocurred: {error.message}</div>;
+  }
+
+  if (checkLogin?.loggedIn) {
+    if (checkLogin?.role === "student") {
+      window.location.href = "/student";
+    } else if (checkLogin?.role === "teacher") {
+      window.location.href = "/teacher";
+    }
   }
 
   function handleLogin(loginData: { email: string; password: string }) {

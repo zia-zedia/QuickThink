@@ -19,6 +19,13 @@ import { db } from "~/server/db";
 import { contextProps } from "@trpc/react-query/shared";
 
 export const organizationRouter = createTRPCRouter({
+  deleteOrganization: publicProcedure
+    .input(z.object({ organization_id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.db
+        .delete(organizations)
+        .where(eq(organizations.id, input.organization_id));
+    }),
   getOrganizations: publicProcedure.query(async ({ ctx }) => {
     return await ctx.db.select().from(organizations);
   }),
@@ -27,7 +34,6 @@ export const organizationRouter = createTRPCRouter({
       z.object({
         organization_id: z.string().uuid(),
         name: z.string(),
-        description: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

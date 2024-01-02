@@ -16,6 +16,9 @@ import {
   ZodResultInsert,
   ZodAnswerSubmit,
   ResultInsert,
+  users,
+  user_org,
+  organizations,
 } from "~/drizzle/schema";
 import {
   authenticatedProcedure,
@@ -24,7 +27,73 @@ import {
 } from "~/server/api/trpc";
 
 export const testRouter = createTRPCRouter({
-  getTestDataForTest: publicProcedure
+  checkSession: authenticatedProcedure
+    .input(z.object({ test_id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const session = await ctx.db
+        .select()
+        .from(sessions)
+        .where(
+          and(
+            eq(sessions.testId, input.test_id),
+            eq(sessions.userId, ctx.user?.id!),
+          ),
+        );
+
+      if (Date.now() > new Date(session[0]?.endTime!).getTime()) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You have ran out of time",
+        });
+      }
+
+      const sessionInfo =
+        session.length > 0
+          ? {
+              session: session,
+              timer: calculateRemainingTime(session[0]?.endTime!),
+            }
+          : { session: session, timer: null };
+
+      return sessionInfo;
+    }),
+  getTestDataForTest: authenticatedProcedure
+    .input(z.object({ test_id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const db = ctx.db;
+      const testQuery = await db
+        .select({
+          question: questions,
+          answers: {
+            id: answers.id,
+            content: answers.content,
+            questionId: answers.questionId,
+          },
+        })
+        .from(questions)
+        .leftJoin(answers, eq(answers.questionId, questions.id))
+        .where(eq(questions.testId, input.test_id));
+
+      const testQuestions = Object.values(
+        testQuery.reduce<
+          Record<number, { question: Question; answers: Answer[] }>
+        >((acc, row) => {
+          const question = row.question;
+          const answers = row.answers;
+
+          if (!acc[question.id]) {
+            acc[question.id] = { question, answers: [] };
+          }
+          if (answers) {
+            acc[question.id]?.answers.push(answers);
+          }
+          return acc;
+        }, {}),
+      );
+
+      return testQuestions;
+    }),
+  getTestDataWithId: authenticatedProcedure
     .input(z.object({ test_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       const db = ctx.db;
@@ -61,85 +130,62 @@ export const testRouter = createTRPCRouter({
 
       return testQuestions;
     }),
-  getTestDataWithId: publicProcedure
-    .input(z.object({ test_id: z.string().uuid() }))
-    .query(async ({ ctx, input }) => {
-      const db = ctx.db;
-      const testQuery = await db
-        .select({
-          question: questions,
-          answers: {
-            id: answers.id,
-            content: answers.content,
-            questionId: answers.questionId,
-            isCorrect: answers.isCorrect,
-          },
-        })
-        .from(questions)
-        .leftJoin(answers, eq(answers.questionId, questions.id))
-        .where(eq(questions.testId, input.test_id));
-
-      const testQuestions = Object.values(
-        testQuery.reduce<
-          Record<number, { question: Question; answers: Answer[] }>
-        >((acc, row) => {
-          const question = row.question;
-          const answers = row.answers;
-
-          if (!acc[question.id]) {
-            acc[question.id] = { question, answers: [] };
-          }
-          if (answers) {
-            acc[question.id]?.answers.push(answers);
-          }
-          return acc;
-        }, {}),
-      );
-
-      return testQuestions;
-    }),
-  getTestIntroWithId: publicProcedure
+  getTestIntroWithId: authenticatedProcedure
     .input(z.object({ test_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       const db = ctx.db;
       const test = await db
-        .select({
-          title: tests.title,
-          description: tests.description,
-          publishDate: tests.publishedAt,
-        })
+        .select()
         .from(tests)
         .where(eq(tests.id, input.test_id));
 
       if (test.length > 0) {
+        if (test[0]?.visibility === "organization") {
+          const user = await db
+            .select()
+            .from(user_org)
+            .where(
+              and(
+                eq(user_org.userId, ctx.user?.id!),
+                eq(organizations.id, test[0].organizationId!),
+              ),
+            );
+
+          if (user.length === 0) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "You are not allowed to take this test",
+            });
+          }
+          return { testData: test[0] };
+        }
         return { testData: test[0] };
       }
       throw new TRPCError({ code: "NOT_FOUND" });
     }),
-  startSession: publicProcedure
+  startSession: authenticatedProcedure
     .input(z.object({ test_id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       console.log("about to add something to the database :)");
       const db = ctx.db;
-      const newSession = await db
-        .insert(sessions)
-        .values({ testId: input.test_id })
-        .returning();
-
       const test = await db
         .select({ testTimeLength: tests.timeLength })
         .from(tests)
         .where(eq(tests.id, input.test_id));
-
-      const maxTestTime = new Date(
-        newSession[0]?.startTime!.getTime()! +
-          Number(test[0]?.testTimeLength!) * 1000,
-      );
-      const remainingTime = calculateRemainingTime(maxTestTime);
-      console.log(remainingTime);
+      const newSession = await db
+        .insert(sessions)
+        .values({
+          testId: input.test_id,
+          userId: ctx.user?.id!,
+          endTime: new Date(
+            Date.now() + Number(test[0]?.testTimeLength) * 1000,
+          ),
+        })
+        .returning();
+      const remainingTime = calculateRemainingTime(newSession[0]?.endTime!);
       return { session: newSession, timer: remainingTime };
     }),
-  handleSession: publicProcedure
+  handleSession: authenticatedProcedure
     .input(
       z.object({
         sessionId: z.string().uuid().nullable(),
@@ -166,12 +212,6 @@ export const testRouter = createTRPCRouter({
           ),
         )
         .leftJoin(tests, eq(sessions.testId, tests.id));
-      if (session.length === 0) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "We haven't found this session for this test",
-        });
-      }
       const maxTestTime = new Date(
         session[0]?.startTime!.getTime()! +
           Number(session[0]?.testTimeLength) * 1000,
@@ -186,7 +226,7 @@ export const testRouter = createTRPCRouter({
       console.log(remainingTime);
       return { session: session, timer: remainingTime };
     }),
-  submitTest: publicProcedure
+  submitTest: authenticatedProcedure
     .input(
       z.object({
         testId: z.string().uuid(),
@@ -224,6 +264,7 @@ export const testRouter = createTRPCRouter({
       });
       const finalResult = Promise.all(calculateAnswer).then(async () => {
         const finalResult: ResultInsert = {
+          studentId: ctx.user?.id,
           testId: input.testId,
           grade: finalGrade / totalGrade,
         };

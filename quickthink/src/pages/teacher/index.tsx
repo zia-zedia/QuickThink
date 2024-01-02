@@ -17,7 +17,6 @@ import { api } from "~/utils/api";
 import { CardContainer } from "..";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { Navbar } from "~/components/Navbar";
-import { ConsoleLogWriter } from "drizzle-orm";
 
 const defaultContext: TeacherPageContextData = {
   currentTestId: "",
@@ -32,6 +31,25 @@ export const TeacherPageContext =
 export default function TeacherLayout() {
   const [currentTestId, setCurrentTestId] = useState("");
   const [testStates, setTestStates] = useState<Array<TestState>>([]);
+  const {
+    isLoading,
+    isError,
+    data: checkLogin,
+    error,
+  } = api.auth.isLoggedIn.useQuery();
+
+  if (isLoading) {
+    return;
+  }
+
+  if (isError) {
+    return <>An error occurred: {error.message}</>;
+  }
+
+  if (!(checkLogin.loggedIn && checkLogin.role === "teacher")) {
+    window.location.href = "/";
+    return;
+  }
 
   return (
     <>
@@ -166,7 +184,7 @@ export function YourTests(props: { children?: ReactNode }) {
                     <h1 className="font-bold">Published</h1>
                     {testStates.filter(
                       (value) => value.testData.visibility === "public",
-                    ).length === 0 && <p>No drafts found</p>}
+                    ).length === 0 && <p>No published tests found</p>}
                   </div>
                   {testStates
                     .filter((value) => value.testData.visibility === "public")
@@ -243,11 +261,7 @@ export function TestInfoContainer(props: {
         <p className="truncate font-light">{test.description}</p>
         <div className="flex items-center justify-between">
           <h1 className="italic">
-            Created on {test.publishedAt?.getDay().toString()}
-            {"/"}
-            {test.publishedAt?.getMonth().toString()}
-            {"/"}
-            {test.publishedAt?.getFullYear().toString()}
+            Created on {test.publishedAt?.toDateString()}
           </h1>
           <div className="rounded bg-[#849EFA] p-2 text-xs text-white">
             {test.difficulty}
@@ -283,7 +297,7 @@ export function TestTopBar() {
     isPreviousData,
     isSuccess,
     isRefetching,
-  } = api.tests.getTestIntroWithId.useQuery({ test_id: testId });
+  } = api.teacher.getTestIntroWithId.useQuery({ test_id: testId });
 
   const { currentTestId, setCurrentTestId, testStates, setTestStates } =
     useContext(TeacherPageContext);
@@ -298,10 +312,11 @@ export function TestTopBar() {
 
   const [title, setTitle] = useState(currentTest.title);
   const [description, setDescription] = useState(currentTest.description);
+  const [timeLength, setTimeLength] = useState(currentTest.timeLength);
   const [isDeleting, setIsDeleting] = useState(false);
   const publishTest = api.teacher.publishTest.useMutation({
     onSuccess: () => {
-      location.replace(location.href);
+      location.reload();
     },
   });
   const saveDraft = api.teacher.saveDraft.useMutation();
@@ -336,6 +351,21 @@ export function TestTopBar() {
     });
     setTestStates(newTestStates);
   }, [title]);
+
+  useEffect(() => {
+    const newTestStates = testStates.map((state) => {
+      if (state.testId === currentTestId) {
+        console.log(state.testId);
+        console.log(state.testData.title);
+        return {
+          ...state,
+          testData: { ...state.testData, timeLength: timeLength },
+        };
+      }
+      return state;
+    });
+    setTestStates(newTestStates);
+  }, [timeLength]);
 
   useEffect(() => {
     const newTestStates = testStates.map((state) => {
@@ -397,7 +427,6 @@ export function TestTopBar() {
             className="bg-none text-lg font-bold text-[#1A2643] outline-none"
             value={currentTest.title!}
             onChange={(event) => {
-              console.log("triggered >:P");
               setTitle(event.target.value);
             }}
           />
@@ -405,15 +434,25 @@ export function TestTopBar() {
             className="text-sm outline-none"
             value={currentTest.description!}
             onChange={(event) => {
-              console.log("triggered >:P");
               setDescription(event.target.value);
             }}
           />
         </div>
-        <div>
+        <div className="flex flex-col">
           <p className="font-light">
-            Published on: {data.testData?.publishDate!.toDateString()}
+            Published on: {data.testData?.publishedAt!.toDateString()}
           </p>
+          <div className="flex flex-row gap-2">
+            <label className="font-bold">Time in seconds:</label>
+            <input
+              className="text-sm outline-none"
+              type="number"
+              value={currentTest.timeLength ? currentTest.timeLength : 0}
+              onChange={(event) => {
+                setTimeLength(Number(event.target.value));
+              }}
+            />
+          </div>
         </div>
       </div>
       <div className="flex flex-col rounded-b-lg bg-[#1A2643] px-3 py-1 text-white">
