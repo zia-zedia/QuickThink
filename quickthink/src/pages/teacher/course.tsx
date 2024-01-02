@@ -13,8 +13,6 @@ import { Navbar } from "~/components/Navbar";
 import { CourseType, TestType, UserType } from "~/drizzle/schema";
 import { api } from "~/utils/api";
 import { CardContainer } from "..";
-import { TestComponent } from "../student";
-import { desc } from "drizzle-orm";
 
 export type CoursePageContextType = {
   selectedCourse: CourseType | null;

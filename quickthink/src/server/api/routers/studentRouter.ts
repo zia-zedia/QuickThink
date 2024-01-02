@@ -37,7 +37,7 @@ export const studentRouter = createTRPCRouter({
         or(eq(users.id, ctx.user?.id!), eq(user_courses.userId, ctx.user?.id!)),
       );
   }),
-  getCourseContents: publicProcedure
+  getCourseContents: authenticatedProcedure
     .input(z.object({ course_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       const course = await ctx.db
