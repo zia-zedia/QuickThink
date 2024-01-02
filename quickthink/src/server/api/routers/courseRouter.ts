@@ -109,15 +109,9 @@ export const courseRouter = createTRPCRouter({
       });
       return update;
     }),
-  getTests: publicProcedure.query(async ({ ctx, input }) => {
-    return await ctx.db.select().from(tests);
-  }),
-  getTeacherTest: teacherProcedure
+  getTests: teacherProcedure
     .input(z.object({ course_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new TRPCError({ code: "UNAUTHORIZED" });
-      }
       return await ctx.db
         .select()
         .from(tests)
@@ -130,6 +124,14 @@ export const courseRouter = createTRPCRouter({
             eq(tests.teacherId, ctx.user?.id!),
           ),
         );
+    }),
+  getTeacherTest: teacherProcedure
+    .input(z.object({ course_id: z.string().uuid() }))
+    .query(async ({ ctx }) => {
+      return await ctx.db
+        .select()
+        .from(tests)
+        .where(eq(tests.teacherId, ctx.user?.id!));
     }),
   getCourseTests: teacherProcedure
     .input(z.object({ course_id: z.string().uuid() }))
