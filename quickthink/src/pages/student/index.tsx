@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ReactNode } from "react";
-import { TestType as Test } from "~/drizzle/schema";
+import { TestType as Test, tests } from "~/drizzle/schema";
 import { api } from "~/utils/api";
 import { Card, CardContainer, Section } from "..";
 import { Navbar, StudentNavBar } from "~/components/Navbar";
@@ -44,6 +44,54 @@ export function StudentIndex() {
         <Courses />
       </div>
     </div>
+  );
+}
+
+export function Results() {
+  const { isLoading, isError, data, error } = api.student.getResults.useQuery();
+
+  if (isLoading) {
+    return <>Loading...</>;
+  }
+  if (isError) {
+    return <>An error occurred {error.message}</>;
+  }
+
+  return (
+    <>
+      <div className="w-full max-w-7xl  p-2">
+        <div className="rounded-[20px] bg-white p-4 shadow-sm">
+          <h1 className="pb-4 text-3xl font-bold">Courses List</h1>
+          <div className="flex w-full flex-row gap-2 overflow-x-scroll px-1 py-2">
+            {data.map((resultData) => {
+              const test = resultData.tests;
+              const result = resultData.results;
+
+              return (
+                <div className="flex w-full min-w-[50%] flex-col gap-3 rounded-lg bg-white p-3 outline outline-1 outline-[#CADBFF] transition-all hover:-translate-y-1 hover:shadow-md hover:shadow-[#CADBFF] hover:outline-[#849EFA]">
+                  <div className="flex h-full flex-col justify-between">
+                    <h1 className="text-ellipsis pb-1 text-xl font-semibold">
+                      {test?.title}
+                    </h1>
+                    <p className="text-ellipsis font-light">
+                      {test?.description}
+                    </p>
+                  </div>
+                  <div className="flex items-center md:justify-end">
+                    <Link
+                      href={`result/${result.id}`}
+                      className="w-full rounded px-2 text-center text-[#849EFA] outline outline-1 outline-[#849EFA] hover:bg-[#849EFA] hover:text-white"
+                    >
+                      View Result
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 

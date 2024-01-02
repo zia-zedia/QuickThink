@@ -16,6 +16,13 @@ import {
 import { eq, or } from "drizzle-orm";
 
 export const studentRouter = createTRPCRouter({
+  getResults: authenticatedProcedure.query(async ({ ctx }) => {
+    return await ctx.db
+      .select()
+      .from(results)
+      .leftJoin(tests, eq(tests.id, results.testId))
+      .where(eq(results.studentId, ctx.user?.id!));
+  }),
   getTestList: authenticatedProcedure.query(async ({ ctx }) => {
     return await ctx.db
       .select()
