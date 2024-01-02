@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { ReactNode, useState } from "react";
+import { api } from "~/utils/api";
 
 export function Navbar(props: { children?: ReactNode }) {
+  const logout = api.auth.logout.useMutation({
+    onSuccess: () => {
+      window.location.href = "/";
+    },
+  });
+
   return (
     <div className="sticky h-full w-[10%] max-w-[70px] bg-[#1A2643] p-3 text-white">
       <div className="flex h-full flex-col justify-between">
@@ -17,7 +24,13 @@ export function Navbar(props: { children?: ReactNode }) {
             {props.children ? props.children : null}
           </div>
         </div>
-        <div>Logout</div>
+        <button
+          onClick={() => {
+            logout.mutate();
+          }}
+        >
+          Logout
+        </button>
       </div>
     </div>
   );
@@ -27,13 +40,11 @@ export function TeacherNavbar() {
   return (
     <Navbar>
       <Link href={"/teacher"}>
-        <div className="h-7 w-7">
-          <img
-            src={"/book_icon.svg"}
-            alt="Tests"
-            className="w-full object-scale-down p-1"
-          />
-        </div>
+        <img
+          src={"/book_icon.svg"}
+          alt="Tests"
+          className="w-full object-scale-down p-1"
+        />
       </Link>
       <Link href={"/teacher/course"}>
         <img
