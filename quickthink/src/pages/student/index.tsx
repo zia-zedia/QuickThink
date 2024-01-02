@@ -29,7 +29,11 @@ export default function StudentLayout(props: { children: ReactNode }) {
   return (
     <>
       <div className="flex h-screen w-full bg-[#EDF0FF]">
-        <Navbar></Navbar>
+        <Navbar>
+          <Link href={"#"}>Something</Link>
+          <Link href={"#"}>Something</Link>
+          <Link href={"#"}>Something</Link>
+        </Navbar>
         <StudentIndex />
       </div>
     </>

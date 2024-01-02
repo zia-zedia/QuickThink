@@ -57,7 +57,11 @@ export default function TeacherLayout() {
         value={{ currentTestId, setCurrentTestId, testStates, setTestStates }}
       >
         <div className="flex h-screen w-full">
-          <Navbar></Navbar>
+          <Navbar>
+            <Link href={"#"}>Something</Link>
+            <Link href={"#"}>Something</Link>
+            <Link href={"#"}>Something</Link>
+          </Navbar>
           <YourTests>
             <div className="p-4 lg:max-w-[75%]">
               <TestSection>
