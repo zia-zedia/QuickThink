@@ -175,3 +175,4 @@ export type UserType = typeof users.$inferSelect;
 export type OrganizationType = typeof organizations.$inferSelect;
 export type ResultAnswerType = typeof result_answers.$inferSelect;
 export type ResultAnswerInsert = typeof result_answers.$inferInsert;
+export type ResultType = typeof results.$inferSelect;

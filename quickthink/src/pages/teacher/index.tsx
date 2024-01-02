@@ -485,6 +485,9 @@ export function TestTopBar() {
             <button className="" onClick={handlePublishing}>
               Publish
             </button>
+            <Link href={`/teacher/results/${currentTestId}`}>
+              <button className="">View Results</button>
+            </Link>
           </div>
         </ul>
         {isDeleting ? (

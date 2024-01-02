@@ -16,6 +16,7 @@ import {
   answers,
   courses,
   questions,
+  results,
   tests,
   users,
 } from "~/drizzle/schema";
@@ -26,6 +27,16 @@ import { db } from "~/server/db";
 import { contextProps } from "@trpc/react-query/shared";
 
 export const teacherRouter = createTRPCRouter({
+  getTestResults: teacherProcedure
+    .input(z.object({ test_id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.db
+        .select()
+        .from(results)
+        .leftJoin(tests, eq(tests.id, results.testId))
+        .leftJoin(users, eq(users.id, results.studentId))
+        .where(eq(results.testId, input.test_id));
+    }),
   getTestIntroWithId: authenticatedProcedure
     .input(z.object({ test_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
@@ -34,7 +45,6 @@ export const teacherRouter = createTRPCRouter({
         .select()
         .from(tests)
         .where(eq(tests.id, input.test_id));
-
       if (test.length > 0) {
         return { testData: test[0] };
       }
