@@ -37,20 +37,11 @@ export function CoursePage() {
       ) : (
         <div className="h-full w-full max-w-5xl rounded-lg border bg-white p-3 shadow">
           {isError ? (
-            <>An error occured</>
+            <>An error occured {error.message}</>
           ) : (
             <>
-              <h1 className="text-2xl font-bold">{data.course.name}</h1>
+              <h1 className="text-2xl font-bold">{data.course?.name}</h1>
               <div className="flex flex-col gap-3 pt-3">
-                {data.tests.map((test) => {
-                  return <CourseTest test={test} />;
-                })}
-                {data.tests.map((test) => {
-                  return <CourseTest test={test} />;
-                })}
-                {data.tests.map((test) => {
-                  return <CourseTest test={test} />;
-                })}
                 {data.tests.map((test) => {
                   return <CourseTest test={test} />;
                 })}

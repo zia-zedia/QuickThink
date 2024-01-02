@@ -108,7 +108,7 @@ export function Courses() {
     return <>Loading...</>;
   }
   if (isError) {
-    return <>An error occurred</>;
+    return <>An error occurred {error.message}</>;
   }
 
   return (
@@ -117,7 +117,8 @@ export function Courses() {
         <div className="rounded-[20px] bg-white p-4 shadow-sm">
           <h1 className="pb-4 text-3xl font-bold">Courses List</h1>
           <div className="flex w-full flex-row gap-2 overflow-x-scroll px-1 py-2">
-            {data.map((course) => {
+            {data.map((courseData) => {
+              const course = courseData.courses;
               return (
                 <div className="flex w-full min-w-[50%] flex-col gap-3 rounded-lg bg-white p-3 outline outline-1 outline-[#CADBFF] transition-all hover:-translate-y-1 hover:shadow-md hover:shadow-[#CADBFF] hover:outline-[#849EFA]">
                   <div className="flex h-full flex-col justify-between">
