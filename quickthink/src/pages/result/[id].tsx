@@ -12,7 +12,7 @@ export default function ResultPage() {
     return;
   }
 
-  const { data, error, isLoading, isError } = api.student.getResult.useQuery({
+  const { data, error, isLoading, isError } = api.results.getResult.useQuery({
     result_id: resultId,
   });
 
@@ -41,7 +41,7 @@ export default function ResultPage() {
                               {data.test?.title}
                             </h1>
                             <p className="text-lg italic">
-                              Grade: {data.result.grade * 100} / 100
+                              Grade: {data.result?.grade! * 100} / 100
                             </p>
                           </div>
                           <div>

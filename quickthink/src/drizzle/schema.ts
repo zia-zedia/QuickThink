@@ -173,3 +173,4 @@ export type ResultInsert = typeof results.$inferInsert;
 export type CourseType = typeof courses.$inferSelect;
 export type UserType = typeof users.$inferSelect;
 export type OrganizationType = typeof organizations.$inferSelect;
+export type ResultAnswerType = typeof result_answers.$inferSelect;

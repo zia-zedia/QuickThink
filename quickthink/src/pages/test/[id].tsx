@@ -457,7 +457,7 @@ export function Answer(props: {
       <div
         className={`${
           isSelected ? "outline outline-2 outline-[#1A2643]" : ""
-        } flex flex-row items-center gap-x-3 rounded bg-white px-3 py-2 font-light transition-all hover:shadow`}
+        } flex flex-row items-center gap-x-3 rounded bg-white px-3 py-2 font-light transition-all hover:font-bold hover:shadow hover:outline hover:outline-1 hover:outline-[#1A2643]`}
         key={answer.id}
         onClick={() => {
           onSelect(answer);
