@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   ReactNode,
   useState,
@@ -17,6 +18,7 @@ import { api } from "~/utils/api";
 import { CardContainer } from "..";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { Navbar } from "~/components/Navbar";
+import Link from "next/link";
 
 const defaultContext: TeacherPageContextData = {
   currentTestId: "",
