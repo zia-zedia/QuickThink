@@ -122,7 +122,7 @@ export function YourTests(props: { children?: ReactNode }) {
   useEffect(() => {
     if ((isSuccess && data.length > 0 && !isPreviousData) || isRefetching) {
       const newTestStates: Array<TestState> = [];
-      data.map((value) => {
+      data!.map((value) => {
         const testInState = testStates.filter(
           (state) => state.testId === value.tests.id,
         );
