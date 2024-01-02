@@ -27,14 +27,14 @@ export default function ResultDetails() {
           ) : (
             <>
               <div className="flex h-full min-h-screen flex-col items-center bg-[#EDF0FF]">
-                <ResultTopBar test={testTest} />
+                <ResultTopBar test={data.test[0]!} />
                 <ResultContainer>
-                  {testQnA.map((qna) => {
+                  {data.testQuestions.map((qna) => {
                     return (
                       <Result
                         QnA={qna}
                         studentAnswers={
-                          testStudentAnswer.find(
+                          data.studentQuestions.find(
                             (stuQna) => stuQna.question.id === qna.question.id,
                           )!
                         }
