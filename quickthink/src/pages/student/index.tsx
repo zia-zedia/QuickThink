@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 import { TestType as Test } from "~/drizzle/schema";
 import { api } from "~/utils/api";
 import { Card, CardContainer, Section } from "..";
-import { Navbar } from "~/components/Navbar";
+import { Navbar, StudentNavBar } from "~/components/Navbar";
 
 export default function StudentLayout(props: { children: ReactNode }) {
   const {
@@ -29,11 +29,7 @@ export default function StudentLayout(props: { children: ReactNode }) {
   return (
     <>
       <div className="flex h-screen w-full bg-[#EDF0FF]">
-        <Navbar>
-          <Link href={"#"}>Somethings</Link>
-          <Link href={"#"}>Somethings</Link>
-          <Link href={"#"}>Somethings</Link>
-        </Navbar>
+        <StudentNavBar />
         <StudentIndex />
       </div>
     </>

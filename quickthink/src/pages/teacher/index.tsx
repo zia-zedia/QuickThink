@@ -17,7 +17,7 @@ import {
 import { api } from "~/utils/api";
 import { CardContainer } from "..";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
-import { Navbar } from "~/components/Navbar";
+import { Navbar, TeacherNavbar } from "~/components/Navbar";
 
 const defaultContext: TeacherPageContextData = {
   currentTestId: "",
@@ -46,7 +46,6 @@ export default function TeacherLayout() {
   if (isError) {
     return <>An error occurred: {error.message}</>;
   }
-
   if (!(checkLogin.loggedIn && checkLogin.role === "teacher")) {
     window.location.href = "/";
     return;
@@ -58,11 +57,7 @@ export default function TeacherLayout() {
         value={{ currentTestId, setCurrentTestId, testStates, setTestStates }}
       >
         <div className="flex h-screen w-full">
-          <Navbar>
-            <Link href={"#"}>Something</Link>
-            <Link href={"#"}>Something</Link>
-            <Link href={"#"}>Something</Link>
-          </Navbar>
+          <TeacherNavbar />
           <YourTests>
             <div className="p-4 lg:max-w-[75%]">
               <TestSection>

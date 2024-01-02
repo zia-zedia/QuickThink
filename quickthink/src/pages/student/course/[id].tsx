@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Navbar } from "~/components/Navbar";
+import { Navbar, StudentNavBar } from "~/components/Navbar";
 import { TestType } from "~/drizzle/schema";
 import { api } from "~/utils/api";
 
 export default function CourseLayout() {
   return (
     <div className="flex h-screen w-full">
-      <Navbar></Navbar>
+      <StudentNavBar />
       <div className="h-full w-full overflow-y-scroll p-3">
         <CoursePage />
       </div>

@@ -9,7 +9,7 @@ import {
   useContext,
 } from "react";
 import { ZodString, set, z } from "zod";
-import { Navbar } from "~/components/Navbar";
+import { Navbar, TeacherNavbar } from "~/components/Navbar";
 import { CourseType, TestType, UserType } from "~/drizzle/schema";
 import { api } from "~/utils/api";
 import { CardContainer } from "..";
@@ -103,7 +103,7 @@ export default function CoursePage() {
           <link rel="icon" href="/favicon.ico" />
         </Head>
         <div className="flex h-screen w-full">
-          <Navbar></Navbar>
+          <TeacherNavbar />
           <CourseListContainer>
             {isLoading ? (
               <>Loading...</>
