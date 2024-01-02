@@ -31,6 +31,7 @@ export default function StudentLayout(props: { children: ReactNode }) {
       <div className="flex h-screen w-full bg-[#EDF0FF]">
         <StudentNavBar />
         <StudentIndex />
+        <Results />
       </div>
     </>
   );

@@ -62,6 +62,12 @@ export default function ResultPage() {
             >
               Go back to dashboard
             </Link>
+            <Link
+              href={`/result/details/${resultId}`}
+              className="flex justify-end rounded-b-lg bg-[#1A2643] px-3 py-1 text-white"
+            >
+              View Result Details
+            </Link>
           </div>
         </div>
       </div>
