@@ -177,7 +177,7 @@ export const teacherRouter = createTRPCRouter({
         description: "Describe your test here",
         visibility: "draft",
         difficulty: "EASY",
-        teacherId: ctx.user?.id!,
+        teacherId: ctx.user?.id,
       })
       .returning();
   }),
@@ -200,6 +200,7 @@ export const teacherRouter = createTRPCRouter({
     return await ctx.db
       .select()
       .from(tests)
+      .leftJoin(users, eq(users.id, tests.teacherId))
       .where(eq(tests.teacherId, ctx.user?.id!));
   }),
   deleteQuestion: teacherProcedure
@@ -212,7 +213,7 @@ export const teacherRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       await db.delete(answers).where(eq(answers.id, input.answerId));
     }),
-  saveDraft: teacherProcedure
+  saveDraft: publicProcedure
     .input(
       z.object({
         test: ZodInsertTest,
