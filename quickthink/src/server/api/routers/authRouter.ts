@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import { UserInsert, organization, users } from "~/drizzle/schema";
+import { UserInsert, organizations, users } from "~/drizzle/schema";
 import { eq } from "drizzle-orm";
 
 export const registrationSchema = z.object({
@@ -71,7 +71,7 @@ export const authRouter = createTRPCRouter({
         .returning();
 
       if (newUser[0]?.role === "teacher") {
-        await ctx.db.insert(organization).values({
+        await ctx.db.insert(organizations).values({
           name: `${newUser[0].userName}'s organization`,
           creatorId: newUser[0].id,
         });
@@ -85,6 +85,7 @@ export const authRouter = createTRPCRouter({
   isLoggedIn: publicProcedure.query(async ({ ctx }) => {
     const supabase = ctx.supabase;
     const user = await supabase.auth.getUser();
+    console.log(user);
     if (user.data.user != null) {
       console.log(user.data.user);
       return true;
