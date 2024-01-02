@@ -36,22 +36,18 @@ export function TeacherNavbar() {
         </div>
       </Link>
       <Link href={"/teacher/course"}>
-        <div className="h-7 w-7">
-          <img
-            src={"/book_icon.svg"}
-            alt="Courses"
-            className="w-full object-scale-down p-1"
-          />
-        </div>
+        <img
+          src={"/test_icon.svg"}
+          alt="Courses"
+          className="w-full object-scale-down"
+        />
       </Link>
       <Link href={"/teacher/organization"}>
-        <div className="h-7 w-7">
-          <img
-            src={"/organization_icon.svg"}
-            alt="Tests"
-            className="w-full object-scale-down p-1"
-          />
-        </div>
+        <img
+          src={"/organization_icon.svg"}
+          alt="Tests"
+          className="w-full object-scale-down p-1"
+        />
       </Link>
     </Navbar>
   );
@@ -61,13 +57,11 @@ export function StudentNavBar() {
   return (
     <Navbar>
       <Link href={"/teacher"}>
-        <div className="h-7 w-7">
-          <img
-            src={"/book_icon.svg"}
-            alt="Dashboard"
-            className="w-full object-scale-down p-1"
-          />
-        </div>
+        <img
+          src={"/book_icon.svg"}
+          alt="Dashboard"
+          className="w-full object-scale-down p-1"
+        />
       </Link>
     </Navbar>
   );
