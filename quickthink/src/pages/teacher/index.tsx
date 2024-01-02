@@ -322,7 +322,7 @@ export function TestTopBar() {
   const [isDeleting, setIsDeleting] = useState(false);
   const publishTest = api.teacher.publishTest.useMutation({
     onSuccess: () => {
-      location.replace(location.href);
+      location.reload();
     },
   });
   const saveDraft = api.teacher.saveDraft.useMutation();
