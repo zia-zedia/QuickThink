@@ -1,2 +1,2 @@
 # QuickThink
-A test taking platform for teachers to distribute their tests and gain insights on their test results.
+A test taking platform for multiple choice tests and flexible education management
