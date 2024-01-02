@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import {
+  authenticatedProcedure,
+  createTRPCRouter,
+  publicProcedure,
+} from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { UserInsert, organizations, users } from "~/drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -11,6 +15,9 @@ export const registrationSchema = z.object({
 });
 
 export const authRouter = createTRPCRouter({
+  logout: authenticatedProcedure.mutation(async ({ ctx }) => {
+    return await ctx.supabase.auth.signOut();
+  }),
   login: publicProcedure
     .input(z.object({ email: z.string().email(), password: z.string() }))
     .mutation(async ({ ctx, input }) => {
