@@ -17,8 +17,6 @@ import { api } from "~/utils/api";
 import { CardContainer } from "..";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { Navbar } from "~/components/Navbar";
-import { ConsoleLogWriter } from "drizzle-orm";
-import { check } from "prettier";
 
 const defaultContext: TeacherPageContextData = {
   currentTestId: "",
@@ -263,11 +261,7 @@ export function TestInfoContainer(props: {
         <p className="truncate font-light">{test.description}</p>
         <div className="flex items-center justify-between">
           <h1 className="italic">
-            Created on {test.publishedAt?.getDay().toString()}
-            {"/"}
-            {test.publishedAt?.getMonth().toString()}
-            {"/"}
-            {test.publishedAt?.getFullYear().toString()}
+            Created on {test.publishedAt?.toDateString()}
           </h1>
           <div className="rounded bg-[#849EFA] p-2 text-xs text-white">
             {test.difficulty}

@@ -29,6 +29,26 @@ export const OrganizationPageContext =
 export default function OrganizationPage() {
   const [selectedOrganization, setSelectedOrganization] =
     useState<OrganizationType | null>(null);
+  const {
+    isLoading: checkLoginIsLoading,
+    isError: checkLoginIsError,
+    data: checkLogin,
+    error: checkLoginError,
+  } = api.auth.isLoggedIn.useQuery();
+
+  if (checkLoginIsLoading) {
+    return;
+  }
+
+  if (checkLoginIsError) {
+    return <>An error occurred: {checkLoginError.message}</>;
+  }
+
+  if (!(checkLogin.loggedIn && checkLogin.role === "teacher")) {
+    window.location.href = "/";
+    return;
+  }
+
   const { data, error, isError, isLoading, refetch } =
     api.organizations.getOrganizations.useQuery();
   const organizationAdd = api.organizations.addOrganization.useMutation({
