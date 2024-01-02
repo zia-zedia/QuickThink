@@ -159,6 +159,7 @@ export const testRouter = createTRPCRouter({
           }
           return { testData: test[0] };
         }
+        return { testData: test[0] };
       }
       throw new TRPCError({ code: "NOT_FOUND" });
     }),
@@ -167,7 +168,6 @@ export const testRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       console.log("about to add something to the database :)");
       const db = ctx.db;
-      const userId = "7a5c1f09-f2bc-457e-9a3a-f2a94f26d216";
       const test = await db
         .select({ testTimeLength: tests.timeLength })
         .from(tests)
@@ -176,7 +176,7 @@ export const testRouter = createTRPCRouter({
         .insert(sessions)
         .values({
           testId: input.test_id,
-          userId: userId,
+          userId: ctx.user?.id!,
           endTime: new Date(
             Date.now() + Number(test[0]?.testTimeLength) * 1000,
           ),
