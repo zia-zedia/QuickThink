@@ -127,12 +127,7 @@ export const courseRouter = createTRPCRouter({
       return await ctx.db
         .select()
         .from(tests)
-        .where(
-          and(
-            not(eq(tests.courseId, input.course_id)),
-            eq(tests.teacherId, ctx.user?.id!),
-          ),
-        );
+        .where(and(isNull(tests.courseId), eq(tests.teacherId, ctx.user?.id!)));
     }),
   removeParticipant: teacherProcedure
     .input(
