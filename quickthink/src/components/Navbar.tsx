@@ -31,7 +31,7 @@ export function TeacherNavbar() {
           <img
             src={"/book_icon.svg"}
             alt="Tests"
-            className="fill-[#1A2643] object-contain"
+            className="w-full object-scale-down p-1"
           />
         </div>
       </Link>
@@ -40,7 +40,7 @@ export function TeacherNavbar() {
           <img
             src={"/book_icon.svg"}
             alt="Courses"
-            className="fill-[#1A2643] object-contain"
+            className="w-full object-scale-down p-1"
           />
         </div>
       </Link>
@@ -49,7 +49,7 @@ export function TeacherNavbar() {
           <img
             src={"/organization_icon.svg"}
             alt="Tests"
-            className="fill-[#1A2643] object-contain"
+            className="w-full object-scale-down p-1"
           />
         </div>
       </Link>
@@ -65,7 +65,7 @@ export function StudentNavBar() {
           <img
             src={"/book_icon.svg"}
             alt="Dashboard"
-            className="fill-[#1A2643] object-contain"
+            className="w-full object-scale-down p-1"
           />
         </div>
       </Link>
