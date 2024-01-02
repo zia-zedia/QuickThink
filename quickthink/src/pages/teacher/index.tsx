@@ -124,19 +124,19 @@ export function YourTests(props: { children?: ReactNode }) {
       const newTestStates: Array<TestState> = [];
       data!.map((value) => {
         const testInState = testStates.filter(
-          (state) => state.testId === value.tests.id,
+          (state) => state.testId === value.id,
         );
         if (testInState.length > 0) {
           newTestStates.push({
-            testId: value.tests.id,
-            testData: value.tests,
+            testId: value.id,
+            testData: value,
             state: testInState[0]?.state!,
           });
           return;
         }
         newTestStates.push({
-          testId: value.tests.id,
-          testData: value.tests,
+          testId: value.id,
+          testData: value,
           state: [],
         });
       });
