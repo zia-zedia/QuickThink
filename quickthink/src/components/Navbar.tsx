@@ -4,7 +4,7 @@ import { ReactNode, useState } from "react";
 export function Navbar(props: { children?: ReactNode }) {
   return (
     <div className="sticky h-full w-[10%] max-w-[70px] bg-[#1A2643] p-3 text-white">
-      <div className="flex flex-col justify-between">
+      <div className="flex h-full flex-col justify-between">
         <div className="">
           <Link href={"/"}>
             <img
