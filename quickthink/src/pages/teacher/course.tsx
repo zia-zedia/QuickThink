@@ -584,7 +584,7 @@ export function TestList() {
     if (!selectedCourse) {
       return;
     }
-    testRemove.mutate({ test_id: test.id });
+    testRemove.mutate({ test_id: test.id, course_id: selectedCourse.id });
   }
 
   return (

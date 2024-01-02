@@ -56,22 +56,47 @@ export const courseRouter = createTRPCRouter({
         .set({ name: input.name, description: input.description })
         .where(eq(courses.id, input.course_id));
     }),
-  addCourse: publicProcedure.mutation(async ({ ctx }) => {
-    return await ctx.db
-      .insert(courses)
-      .values({ name: "New Course", description: "Describe your course" });
+  addCourse: teacherProcedure.mutation(async ({ ctx }) => {
+    return await ctx.db.insert(courses).values({
+      name: "New Course",
+      description: "Describe your course",
+      creatorId: ctx.user?.id,
+    });
   }),
-  removeTestFromCourse: publicProcedure
-    .input(z.object({ test_id: z.string().uuid() }))
+  removeTestFromCourse: teacherProcedure
+    .input(
+      z.object({ test_id: z.string().uuid(), course_id: z.string().uuid() }),
+    )
     .mutation(async ({ ctx, input }) => {
+      const course = await ctx.db
+        .select({ userId: courses.creatorId })
+        .from(courses)
+        .where(eq(courses.id, input.course_id));
+      if (ctx.user?.id !== course[0]?.userId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not the creator of this course",
+        });
+      }
       return await ctx.db
         .update(tests)
         .set({ courseId: null })
         .where(eq(tests.id, input.test_id));
     }),
-  addTestsToCourse: publicProcedure
+  addTestsToCourse: teacherProcedure
     .input(z.object({ course_id: z.string().uuid(), tests: z.array(ZodTest) }))
     .mutation(async ({ ctx, input }) => {
+      const course = await ctx.db
+        .select({ userId: courses.creatorId })
+        .from(courses)
+        .where(eq(courses.id, input.course_id));
+      if (ctx.user?.id !== course[0]?.userId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not the creator of this course",
+        });
+      }
+
       const updatedTests = input.tests.map(async (test) => {
         await ctx.db
           .update(tests)
@@ -96,19 +121,35 @@ export const courseRouter = createTRPCRouter({
       .from(tests)
       .where(eq(tests.teacherId, ctx.user?.id!));
   }),
-  getCourseTests: publicProcedure
+  getCourseTests: teacherProcedure
     .input(z.object({ course_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       return await ctx.db
         .select()
         .from(tests)
-        .where(eq(tests.courseId, input.course_id));
+        .where(
+          and(
+            not(eq(tests.courseId, input.course_id)),
+            eq(tests.teacherId, ctx.user?.id!),
+          ),
+        );
     }),
-  removeParticipant: publicProcedure
+  removeParticipant: teacherProcedure
     .input(
       z.object({ course_id: z.string().uuid(), user_id: z.string().uuid() }),
     )
     .mutation(async ({ ctx, input }) => {
+      const course = await ctx.db
+        .select({ userId: courses.creatorId })
+        .from(courses)
+        .where(eq(courses.id, input.course_id));
+      if (ctx.user?.id !== course[0]?.userId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not the creator of this course",
+        });
+      }
+
       return await ctx.db
         .delete(user_courses)
         .where(
@@ -118,9 +159,20 @@ export const courseRouter = createTRPCRouter({
           ),
         );
     }),
-  getParticipants: publicProcedure
+  getParticipants: teacherProcedure
     .input(z.object({ course_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
+      const course = await ctx.db
+        .select({ userId: courses.creatorId })
+        .from(courses)
+        .where(eq(courses.id, input.course_id));
+      if (ctx.user?.id !== course[0]?.userId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not the creator of this course",
+        });
+      }
+
       return await ctx.db
         .select()
         .from(user_courses)
@@ -128,7 +180,7 @@ export const courseRouter = createTRPCRouter({
         .leftJoin(courses, eq(user_courses.courseId, courses.id))
         .where(and(eq(courses.id, input.course_id), eq(users.role, "student")));
     }),
-  addParticipant: publicProcedure
+  addParticipant: teacherProcedure
     .input(
       z.object({
         username: z.string().min(5).max(15),
@@ -136,6 +188,16 @@ export const courseRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const course = await ctx.db
+        .select({ userId: courses.creatorId })
+        .from(courses)
+        .where(eq(courses.id, input.course_id));
+      if (ctx.user?.id !== course[0]?.userId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not the creator of this course",
+        });
+      }
       const user = await ctx.db
         .select({ id: users.id })
         .from(users)
