@@ -31,7 +31,6 @@ export default function StudentLayout(props: { children: ReactNode }) {
       <div className="flex h-screen w-full bg-[#EDF0FF]">
         <StudentNavBar />
         <StudentIndex />
-        <Results />
       </div>
     </>
   );
@@ -43,6 +42,7 @@ export function StudentIndex() {
       <div className="flex h-full w-full flex-col items-center overflow-y-scroll">
         <AllTests />
         <Courses />
+        <Results />
       </div>
     </div>
   );

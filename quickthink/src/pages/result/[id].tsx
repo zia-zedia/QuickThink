@@ -56,18 +56,17 @@ export default function ResultPage() {
                 </p>
               )}
             </div>
-            <Link
-              href={"/student"}
-              className="flex justify-end rounded-b-lg bg-[#1A2643] px-3 py-1 text-white"
-            >
-              Go back to dashboard
-            </Link>
-            <Link
-              href={`/result/details/${resultId}`}
-              className="flex justify-end rounded-b-lg bg-[#1A2643] px-3 py-1 text-white"
-            >
-              View Result Details
-            </Link>
+            <div className="flex flex-row justify-end gap-3 rounded-b-lg bg-[#1A2643] px-3 py-1 text-white">
+              <Link
+                href={"/student"}
+                className="flex justify-end rounded-b-lg bg-[#1A2643] px-3 py-1 text-white"
+              >
+                Go back to dashboard
+              </Link>
+              <Link href={`/result/detail/${resultId}`}>
+                View Result Details
+              </Link>
+            </div>
           </div>
         </div>
       </div>
