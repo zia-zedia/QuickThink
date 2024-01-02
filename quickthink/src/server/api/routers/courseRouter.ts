@@ -6,7 +6,7 @@ import {
   teacherProcedure,
 } from "../trpc";
 import { ZodTest, courses, tests, user_courses, users } from "~/drizzle/schema";
-import { and, eq, isNull, not } from "drizzle-orm";
+import { and, eq, isNull, not, or } from "drizzle-orm";
 import test from "node:test";
 import { TRPCError } from "@trpc/server";
 import { db } from "~/server/db";
@@ -112,22 +112,32 @@ export const courseRouter = createTRPCRouter({
   getTests: publicProcedure.query(async ({ ctx, input }) => {
     return await ctx.db.select().from(tests);
   }),
-  getTeacherTest: teacherProcedure.query(async ({ ctx, input }) => {
-    if (!ctx.user) {
-      throw new TRPCError({ code: "UNAUTHORIZED" });
-    }
-    return await ctx.db
-      .select()
-      .from(tests)
-      .where(eq(tests.teacherId, ctx.user?.id!));
-  }),
+  getTeacherTest: teacherProcedure
+    .input(z.object({ course_id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.user) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+      return await ctx.db
+        .select()
+        .from(tests)
+        .where(
+          and(
+            or(
+              not(eq(tests.courseId, input.course_id)),
+              isNull(tests.courseId),
+            ),
+            eq(tests.teacherId, ctx.user?.id!),
+          ),
+        );
+    }),
   getCourseTests: teacherProcedure
     .input(z.object({ course_id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       return await ctx.db
         .select()
         .from(tests)
-        .where(and(isNull(tests.courseId), eq(tests.teacherId, ctx.user?.id!)));
+        .where(eq(tests.courseId, input.course_id));
     }),
   removeParticipant: teacherProcedure
     .input(
