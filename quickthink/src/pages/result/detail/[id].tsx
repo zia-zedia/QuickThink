@@ -115,9 +115,11 @@ export function Result(props: {
             <Answer
               answer={answer}
               isCorrect={answer.isCorrect!}
-              isSelected={studentAnswers.answers.find(
-                (stuAnswer) => stuAnswer.id === answer.id,
-              )}
+              isSelected={
+                studentAnswers.answers.find(
+                  (stuAnswer) => stuAnswer.id === answer.id,
+                )?.isCorrect!
+              }
             />
           );
         })}
