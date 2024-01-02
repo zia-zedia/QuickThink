@@ -29,26 +29,6 @@ export const CoursePageContext =
 
 export default function CoursePage() {
   const [selectedCourse, setSelectedCourse] = useState<CourseType | null>(null);
-  const {
-    isLoading: checkLoginIsLoading,
-    isError: checkLoginIsError,
-    data: checkLogin,
-    error: checkLoginError,
-  } = api.auth.isLoggedIn.useQuery();
-
-  if (checkLoginIsLoading) {
-    return;
-  }
-
-  if (checkLoginIsError) {
-    return <>An error occurred: {checkLoginError.message}</>;
-  }
-
-  if (!(checkLogin.loggedIn && checkLogin.role === "teacher")) {
-    window.location.href = "/";
-    return;
-  }
-
   const { data, error, isError, isLoading, refetch } =
     api.teacher.getCourses.useQuery();
   const courseAdd = api.courses.addCourse.useMutation({
@@ -92,6 +72,26 @@ export default function CoursePage() {
     courseDelete.mutate({
       course_id: selectedCourse.id,
     });
+  }
+
+  const {
+    isLoading: checkLoginIsLoading,
+    isError: checkLoginIsError,
+    data: checkLogin,
+    error: checkLoginError,
+  } = api.auth.isLoggedIn.useQuery();
+
+  if (checkLoginIsLoading) {
+    return <></>;
+  }
+
+  if (checkLoginIsError) {
+    return <>An error occurred: {checkLoginError.message}</>;
+  }
+
+  if (!(checkLogin.loggedIn && checkLogin.role === "teacher")) {
+    window.location.href = "/";
+    return;
   }
 
   return (
