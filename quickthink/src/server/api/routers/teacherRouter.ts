@@ -213,7 +213,7 @@ export const teacherRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       await db.delete(answers).where(eq(answers.id, input.answerId));
     }),
-  saveDraft: publicProcedure
+  saveDraft: teacherProcedure
     .input(
       z.object({
         test: ZodInsertTest,
