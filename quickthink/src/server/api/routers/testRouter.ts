@@ -19,6 +19,8 @@ import {
   users,
   user_org,
   organizations,
+  result_answers,
+  ResultAnswerInsert,
 } from "~/drizzle/schema";
 import {
   authenticatedProcedure,
@@ -244,6 +246,7 @@ export const testRouter = createTRPCRouter({
         return acc + QnA.question.grade;
       }, 0);
       let finalGrade = 0;
+      let resultAnswers: ResultAnswerInsert[] = [];
       const calculateAnswer = input.TestAnswers.map(async (QnA) => {
         const correctAnswers = await db
           .select({ id: answers.id, isCorrect: answers.isCorrect })
@@ -254,11 +257,15 @@ export const testRouter = createTRPCRouter({
               eq(answers.isCorrect, true),
             ),
           );
-        QnA.answers.map((answer) => {
+        QnA.answers.map(async (answer) => {
           correctAnswers.map((correctAnswer) => {
             if (correctAnswer.id === answer.id) {
               finalGrade += QnA.question.grade / QnA.question.answerAmount!;
             }
+          });
+          resultAnswers.push({
+            answerId: answer.id,
+            questionId: QnA.question.id,
           });
         });
       });
@@ -272,6 +279,11 @@ export const testRouter = createTRPCRouter({
           .insert(results)
           .values(finalResult)
           .returning();
+
+        const newResultAnswers = resultAnswers.map((answer) => {
+          return { ...answer, resultId: newResult[0]?.id };
+        });
+        await ctx.db.insert(result_answers).values(newResultAnswers);
         console.log(newResult[0]?.grade);
         return { result: newResult[0] };
       });

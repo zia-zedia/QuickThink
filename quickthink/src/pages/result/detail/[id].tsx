@@ -13,68 +13,85 @@ export default function ResultDetails() {
     return;
   }
 
+  const { data, error, isLoading, isError } =
+    api.results.getResultDetails.useQuery({ result_id: result_id });
+
   return (
-    <div className="flex h-full min-h-screen flex-col items-center bg-[#EDF0FF]">
-      <ResultTopBar test={testTest} />
-      <ResultContainer>
-        {testQnA.map((qna) => {
-          return (
-            <Result
-              QnA={qna}
-              studentAnswers={
-                testStudentAnswer.find(
-                  (stuQna) => stuQna.question.id === qna.question.id,
-                )!
-              }
-            />
-          );
-        })}
-      </ResultContainer>
-    </div>
+    <>
+      {isLoading ? (
+        <>Loading...</>
+      ) : (
+        <>
+          {isError ? (
+            <>An error occured {error.message}</>
+          ) : (
+            <>
+              <div className="flex h-full min-h-screen flex-col items-center bg-[#EDF0FF]">
+                <ResultTopBar test={testTest} />
+                <ResultContainer>
+                  {testQnA.map((qna) => {
+                    return (
+                      <Result
+                        QnA={qna}
+                        studentAnswers={
+                          testStudentAnswer.find(
+                            (stuQna) => stuQna.question.id === qna.question.id,
+                          )!
+                        }
+                      />
+                    );
+                  })}
+                </ResultContainer>
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </>
   );
 }
-export const testTest: TestType = {
-  id: "1",
-  title: "Test",
-  description: "Test Description",
-  publishedAt: new Date(),
-};
+// export const testTest: TestType = {
+//   id: "1",
+//   title: "Test",
+//   description: "Test Description",
+//   publishedAt: new Date(),
+// };
 
-export const testQnA: { question: Question; answers: AnswerType[] }[] = [
-  {
-    question: { id: 1, content: "Question 1", grade: 1 },
-    answers: [
-      { id: 1, content: "Answer 1", isCorrect: false, questionId: 1 },
-      { id: 2, content: "Answer 2", isCorrect: false, questionId: 1 },
-      { id: 3, content: "Answer 3", isCorrect: true, questionId: 1 },
-    ],
-  },
-  {
-    question: { id: 2, content: "Question 2", grade: 1 },
-    answers: [
-      { id: 1, content: "Answer 1", isCorrect: false, questionId: 2 },
-      { id: 2, content: "Answer 2", isCorrect: true, questionId: 2 },
-      { id: 3, content: "Answer 3", isCorrect: false, questionId: 2 },
-    ],
-  },
-];
+// export const testQnA: { question: Question; answers: AnswerType[] }[] = [
+//   {
+//     question: { id: 1, content: "Question 1", grade: 1 },
+//     answers: [
+//       { id: 1, content: "Answer 1", isCorrect: false, questionId: 1 },
+//       { id: 2, content: "Answer 2", isCorrect: false, questionId: 1 },
+//       { id: 3, content: "Answer 3", isCorrect: true, questionId: 1 },
+//     ],
+//   },
+//   {
+//     question: { id: 2, content: "Question 2", grade: 1 },
+//     answers: [
+//       { id: 1, content: "Answer 1", isCorrect: false, questionId: 2 },
+//       { id: 2, content: "Answer 2", isCorrect: true, questionId: 2 },
+//       { id: 3, content: "Answer 3", isCorrect: false, questionId: 2 },
+//     ],
+//   },
+// ];
 
-export const testStudentAnswer: {
-  question: Question;
-  answers: AnswerType[];
-}[] = [
-  {
-    question: { id: 1, content: "Question 1", grade: 1 },
-    answers: [{ id: 3, content: "Answer 3", isCorrect: true, questionId: 1 }],
-  },
-  {
-    question: { id: 2, content: "Question 1", grade: 1 },
-    answers: [
-      { id: 2, content: "Answer 2", isCorrect: false, questionId: 2 },
-      { id: 3, content: "Answer 3", isCorrect: true, questionId: 3 },
-    ],
-  },
-];
+// export const testStudentAnswer: {
+//   question: Question;
+//   answers: AnswerType[];
+// }[] = [
+//   {
+//     question: { id: 1, content: "Question 1", grade: 1 },
+//     answers: [{ id: 3, content: "Answer 3", isCorrect: true, questionId: 1 }],
+//   },
+//   {
+//     question: { id: 2, content: "Question 1", grade: 1 },
+//     answers: [
+//       { id: 2, content: "Answer 2", isCorrect: false, questionId: 2 },
+//       { id: 3, content: "Answer 3", isCorrect: true, questionId: 3 },
+//     ],
+//   },
+// ];
 
 export function ResultContainer(props: { children?: ReactNode }) {
   return (

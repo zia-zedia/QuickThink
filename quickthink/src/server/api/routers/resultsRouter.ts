@@ -5,6 +5,9 @@ import {
   authenticatedProcedure,
 } from "../trpc";
 import {
+  AnswerType,
+  Question,
+  answers,
   courses,
   questions,
   result_answers,
@@ -41,7 +44,70 @@ export const resultRouter = createTRPCRouter({
       const result = await ctx.db
         .select()
         .from(results)
-        .leftJoin(result_answers, eq(result_answers.resultId, results.id))
         .where(eq(results.id, input.result_id));
+
+      const testQuery = await ctx.db
+        .select({
+          question: questions,
+          answers: answers,
+        })
+        .from(questions)
+        .leftJoin(answers, eq(answers.questionId, questions.id))
+        .where(eq(questions.testId, result[0]?.testId!));
+
+      const resultQuery = await ctx.db
+        .select({
+          question: questions,
+          answers: answers,
+        })
+        .from(result_answers)
+        .leftJoin(questions, eq(questions.testId, result[0]?.testId!))
+        .leftJoin(answers, eq(answers.questionId, questions.id))
+        .where(eq(result_answers.resultId, input.result_id));
+
+      const test = await ctx.db
+        .select()
+        .from(tests)
+        .where(eq(tests.id, result[0]?.testId!));
+
+      const testQuestion = Object.values(
+        testQuery.reduce<
+          Record<number, { question: Question; answers: AnswerType[] }>
+        >((acc, row) => {
+          const question = row.question;
+          const answers = row.answers;
+
+          if (!acc[question.id]) {
+            acc[question.id] = { question, answers: [] };
+          }
+          if (answers) {
+            acc[question.id]?.answers.push(answers);
+          }
+          return acc;
+        }, {}),
+      );
+
+      const studentQuestion = Object.values(
+        resultQuery.reduce<
+          Record<number, { question: Question; answers: AnswerType[] }>
+        >((acc, row) => {
+          const question = row.question!;
+          const answers = row.answers!;
+
+          if (!acc[question.id]) {
+            acc[question.id] = { question, answers: [] };
+          }
+          if (answers) {
+            acc[question.id]?.answers.push(answers);
+          }
+          return acc;
+        }, {}),
+      );
+
+      return {
+        test: test,
+        studentQuestions: studentQuestion,
+        testQuestions: testQuestion,
+      };
     }),
 });
