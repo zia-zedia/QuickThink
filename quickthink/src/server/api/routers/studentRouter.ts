@@ -27,8 +27,7 @@ export const studentRouter = createTRPCRouter({
     return await ctx.db
       .select()
       .from(users)
-      .leftJoin(user_org, eq(user_org.organizationId, organizations.id))
-      .leftJoin(user_courses, eq(user_courses.userId, organizations.id))
+      .leftJoin(user_courses, eq(users.id, user_courses.userId))
       .leftJoin(courses, eq(user_courses.courseId, courses.id))
       .leftJoin(tests, eq(tests.courseId, courses.id))
       .where(eq(users.id, ctx.user?.id!));

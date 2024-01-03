@@ -103,7 +103,7 @@ export function AllTests() {
     return <>Loading...</>;
   }
   if (isError) {
-    return <>An error occurred</>;
+    return <>An error occurred {error.message}</>;
   }
 
   return (
