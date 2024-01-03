@@ -118,26 +118,26 @@ export function AllTests() {
                 return (
                   <div className="flex w-full min-w-[30%] flex-col justify-between rounded-lg bg-white p-3 outline outline-1 outline-[#CADBFF] transition-all hover:-translate-y-1 hover:shadow-md hover:shadow-[#CADBFF] hover:outline-[#849EFA]">
                     <div>
-                      <h1 className="text-xl font-semibold">{test.title}</h1>
+                      <h1 className="text-xl font-semibold">{test?.title}</h1>
                       <p className="text-ellipsis font-light">
-                        {test.description}
+                        {test?.description}
                       </p>
                       <div className="flex items-center justify-between">
                         <h1 className="italic">
-                          Published on {test.publishedAt?.getDay().toString()}
+                          Published on {test?.publishedAt?.getDay().toString()}
                           {"/"}
-                          {test.publishedAt?.getMonth().toString()}
+                          {test?.publishedAt?.getMonth().toString()}
                           {"/"}
-                          {test.publishedAt?.getFullYear().toString()}
+                          {test?.publishedAt?.getFullYear().toString()}
                         </h1>
                         <div className="rounded bg-[#849EFA] p-2 text-xs text-white">
-                          {test.difficulty}
+                          {test?.difficulty}
                         </div>
                       </div>
                     </div>
                     <div>
                       <div className="my-2 flex w-full items-center justify-center rounded px-2 text-[#849EFA] outline outline-1 outline-[#849EFA] transition-all hover:bg-[#849EFA] hover:text-white">
-                        <Link href={`/test/${test.id}`}>Start test</Link>
+                        <Link href={`/test/${test?.id}`}>Start test</Link>
                       </div>
                     </div>
                   </div>
@@ -172,15 +172,15 @@ export function Courses() {
                 <div className="flex w-full min-w-[50%] flex-col gap-3 rounded-lg bg-white p-3 outline outline-1 outline-[#CADBFF] transition-all hover:-translate-y-1 hover:shadow-md hover:shadow-[#CADBFF] hover:outline-[#849EFA]">
                   <div className="flex h-full flex-col justify-between">
                     <h1 className="text-ellipsis pb-1 text-xl font-semibold">
-                      {course.name}
+                      {course?.name}
                     </h1>
                     <p className="text-ellipsis font-light">
-                      {course.description}
+                      {course?.description}
                     </p>
                   </div>
                   <div className="flex items-center md:justify-end">
                     <Link
-                      href={`student/course/${course.id}`}
+                      href={`student/course/${course?.id}`}
                       className="w-full rounded px-2 text-center text-[#849EFA] outline outline-1 outline-[#849EFA] hover:bg-[#849EFA] hover:text-white"
                     >
                       View Course Contents

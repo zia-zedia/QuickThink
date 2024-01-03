@@ -26,23 +26,21 @@ export const studentRouter = createTRPCRouter({
   getTestList: authenticatedProcedure.query(async ({ ctx }) => {
     return await ctx.db
       .select()
-      .from(tests)
-      .leftJoin(organizations, eq(tests.organizationId, organizations.id))
+      .from(users)
       .leftJoin(user_org, eq(user_org.organizationId, organizations.id))
-      .leftJoin(users, eq(users.id, user_org.userId))
+      .leftJoin(user_courses, eq(user_courses.userId, organizations.id))
+      .leftJoin(courses, eq(user_courses.courseId, courses.id))
+      .leftJoin(tests, eq(tests.courseId, courses.id))
       .where(eq(users.id, ctx.user?.id!));
   }),
   getCourses: authenticatedProcedure.query(async ({ ctx }) => {
     return await ctx.db
       .select()
-      .from(courses)
-      .leftJoin(organizations, eq(courses.organzationId, organizations.id))
-      .leftJoin(user_org, eq(user_org.organizationId, organizations.id))
-      .leftJoin(users, eq(users.id, user_org.userId))
+      .from(users)
+      .leftJoin(user_org, eq(user_org.userId, users.id))
       .leftJoin(user_courses, eq(user_courses.userId, users.id))
-      .where(
-        or(eq(users.id, ctx.user?.id!), eq(user_courses.userId, ctx.user?.id!)),
-      );
+      .leftJoin(courses, eq(user_courses.courseId, courses.id))
+      .where(eq(users.id, ctx.user?.id!));
   }),
   getCourseContents: authenticatedProcedure
     .input(z.object({ course_id: z.string().uuid() }))
