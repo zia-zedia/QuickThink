@@ -116,8 +116,8 @@ export const courseRouter = createTRPCRouter({
         .select()
         .from(tests)
         .where(
-          and(
-            or(
+          or(
+            and(
               not(eq(tests.courseId, input.course_id)),
               isNull(tests.courseId),
             ),
