@@ -13,7 +13,7 @@ import {
   user_org,
   users,
 } from "~/drizzle/schema";
-import { eq, or } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 
 export const studentRouter = createTRPCRouter({
   getResults: authenticatedProcedure.query(async ({ ctx }) => {
@@ -38,7 +38,8 @@ export const studentRouter = createTRPCRouter({
           eq(tests.organizationId, organizations.id),
         ),
       )
-      .where(eq(users.id, ctx.user?.id!));
+      .leftJoin(results, eq(results.testId, tests.id))
+      .where(and(eq(users.id, ctx.user?.id!), isNull(results.id)));
   }),
   getCourses: authenticatedProcedure.query(async ({ ctx }) => {
     return await ctx.db
