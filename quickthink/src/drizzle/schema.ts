@@ -118,7 +118,7 @@ export const sessions = pgTable("sessions", {
     .references(() => tests.id, { onDelete: "cascade" })
     .notNull(),
   userId: uuid("user_id")
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
   startTime: timestamp("start_time").defaultNow(),
   endTime: timestamp("end_time").notNull(),
@@ -173,6 +173,3 @@ export type ResultInsert = typeof results.$inferInsert;
 export type CourseType = typeof courses.$inferSelect;
 export type UserType = typeof users.$inferSelect;
 export type OrganizationType = typeof organizations.$inferSelect;
-export type ResultAnswerType = typeof result_answers.$inferSelect;
-export type ResultAnswerInsert = typeof result_answers.$inferInsert;
-export type ResultType = typeof results.$inferSelect;
