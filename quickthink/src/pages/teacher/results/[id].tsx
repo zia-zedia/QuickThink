@@ -107,12 +107,6 @@ export function Result(props: {
         </div>
       </div>
       <div className="flex flex-row justify-end gap-3 rounded-b-lg bg-[#1A2643] px-3 py-1 text-white">
-        <Link
-          href={"/student"}
-          className="flex justify-end rounded-b-lg bg-[#1A2643] px-3 py-1 text-white"
-        >
-          Go back to dashboard
-        </Link>
         <Link href={`/result/detail/${results.id}`}>View Result Details</Link>
       </div>
     </div>
