@@ -13,7 +13,7 @@ import {
   user_org,
   users,
 } from "~/drizzle/schema";
-import { eq, or } from "drizzle-orm";
+import { and, eq, isNull, not, or } from "drizzle-orm";
 
 export const studentRouter = createTRPCRouter({
   getResults: authenticatedProcedure.query(async ({ ctx }) => {
@@ -26,23 +26,35 @@ export const studentRouter = createTRPCRouter({
   getTestList: authenticatedProcedure.query(async ({ ctx }) => {
     return await ctx.db
       .select()
-      .from(tests)
-      .leftJoin(organizations, eq(tests.organizationId, organizations.id))
-      .leftJoin(user_org, eq(user_org.organizationId, organizations.id))
-      .leftJoin(users, eq(users.id, user_org.userId))
-      .where(eq(users.id, ctx.user?.id!));
+      .from(users)
+      .leftJoin(user_org, eq(user_org.userId, users.id))
+      .leftJoin(organizations, eq(organizations.id, user_org.organizationId))
+      .leftJoin(user_courses, eq(users.id, user_courses.userId))
+      .leftJoin(courses, eq(user_courses.courseId, courses.id))
+      .leftJoin(
+        tests,
+        or(
+          eq(tests.courseId, courses.id),
+          eq(tests.organizationId, organizations.id),
+        ),
+      )
+      .leftJoin(results, eq(results.testId, tests.id))
+      .where(
+        and(
+          eq(users.id, ctx.user?.id!),
+          isNull(results.id),
+          not(eq(tests.visibility, "draft")),
+        ),
+      );
   }),
   getCourses: authenticatedProcedure.query(async ({ ctx }) => {
     return await ctx.db
       .select()
-      .from(courses)
-      .leftJoin(organizations, eq(courses.organzationId, organizations.id))
-      .leftJoin(user_org, eq(user_org.organizationId, organizations.id))
-      .leftJoin(users, eq(users.id, user_org.userId))
+      .from(users)
+      .leftJoin(user_org, eq(user_org.userId, users.id))
       .leftJoin(user_courses, eq(user_courses.userId, users.id))
-      .where(
-        or(eq(users.id, ctx.user?.id!), eq(user_courses.userId, ctx.user?.id!)),
-      );
+      .leftJoin(courses, eq(user_courses.courseId, courses.id))
+      .where(eq(users.id, ctx.user?.id!));
   }),
   getCourseContents: authenticatedProcedure
     .input(z.object({ course_id: z.string().uuid() }))

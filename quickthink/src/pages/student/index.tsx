@@ -62,7 +62,7 @@ export function Results() {
     <>
       <div className="w-full max-w-7xl  p-2">
         <div className="rounded-[20px] bg-white p-4 shadow-sm">
-          <h1 className="pb-4 text-3xl font-bold">Courses List</h1>
+          <h1 className="pb-4 text-3xl font-bold">Recent Results</h1>
           <div className="flex w-full flex-row gap-2 overflow-x-scroll px-1 py-2">
             {data.map((resultData) => {
               const test = resultData.tests;
@@ -99,11 +99,13 @@ export function Results() {
 export function AllTests() {
   const { isLoading, isError, data, error } =
     api.student.getTestList.useQuery();
+
   if (isLoading) {
     return <>Loading...</>;
   }
+
   if (isError) {
-    return <>An error occurred</>;
+    return <>An error occurred {error.message}</>;
   }
 
   return (
@@ -115,29 +117,33 @@ export function AllTests() {
             <div className="flex w-full flex-row gap-2 overflow-x-scroll px-1 py-2">
               {data.map((testData) => {
                 const test = testData.tests;
+
+              if (test?.id === undefined) {
+                return;
+              }
                 return (
                   <div className="flex w-full min-w-[30%] flex-col justify-between rounded-lg bg-white p-3 outline outline-1 outline-[#CADBFF] transition-all hover:-translate-y-1 hover:shadow-md hover:shadow-[#CADBFF] hover:outline-[#849EFA]">
                     <div>
-                      <h1 className="text-xl font-semibold">{test.title}</h1>
+                      <h1 className="text-xl font-semibold">{test?.title}</h1>
                       <p className="text-ellipsis font-light">
-                        {test.description}
+                        {test?.description}
                       </p>
                       <div className="flex items-center justify-between">
                         <h1 className="italic">
-                          Published on {test.publishedAt?.getDay().toString()}
+                          Published on {test?.publishedAt?.getDay().toString()}
                           {"/"}
-                          {test.publishedAt?.getMonth().toString()}
+                          {test?.publishedAt?.getMonth().toString()}
                           {"/"}
-                          {test.publishedAt?.getFullYear().toString()}
+                          {test?.publishedAt?.getFullYear().toString()}
                         </h1>
                         <div className="rounded bg-[#849EFA] p-2 text-xs text-white">
-                          {test.difficulty}
+                          {test?.difficulty}
                         </div>
                       </div>
                     </div>
                     <div>
                       <div className="my-2 flex w-full items-center justify-center rounded px-2 text-[#849EFA] outline outline-1 outline-[#849EFA] transition-all hover:bg-[#849EFA] hover:text-white">
-                        <Link href={`/test/${test.id}`}>Start test</Link>
+                        <Link href={`/test/${test?.id}`}>Start test</Link>
                       </div>
                     </div>
                   </div>
@@ -168,19 +174,24 @@ export function Courses() {
           <div className="flex w-full flex-row gap-2 overflow-x-scroll px-1 py-2">
             {data.map((courseData) => {
               const course = courseData.courses;
+              
+              if (course?.id === undefined) {
+                return;
+              }
+
               return (
                 <div className="flex w-full min-w-[50%] flex-col gap-3 rounded-lg bg-white p-3 outline outline-1 outline-[#CADBFF] transition-all hover:-translate-y-1 hover:shadow-md hover:shadow-[#CADBFF] hover:outline-[#849EFA]">
                   <div className="flex h-full flex-col justify-between">
                     <h1 className="text-ellipsis pb-1 text-xl font-semibold">
-                      {course.name}
+                      {course?.name}
                     </h1>
                     <p className="text-ellipsis font-light">
-                      {course.description}
+                      {course?.description}
                     </p>
                   </div>
                   <div className="flex items-center md:justify-end">
                     <Link
-                      href={`student/course/${course.id}`}
+                      href={`student/course/${course?.id}`}
                       className="w-full rounded px-2 text-center text-[#849EFA] outline outline-1 outline-[#849EFA] hover:bg-[#849EFA] hover:text-white"
                     >
                       View Course Contents

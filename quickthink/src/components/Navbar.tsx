@@ -67,7 +67,7 @@ export function TeacherNavbar() {
 export function StudentNavBar() {
   return (
     <Navbar>
-      <Link href={"/teacher"}>
+      <Link href={"/student"}>
         <img
           src={"/book_icon.svg"}
           alt="Dashboard"

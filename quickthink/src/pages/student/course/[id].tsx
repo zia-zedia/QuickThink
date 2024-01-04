@@ -45,9 +45,6 @@ export function CoursePage() {
                 {data.tests.map((test) => {
                   return <CourseTest test={test} />;
                 })}
-                {data.tests.map((test) => {
-                  return <CourseTest test={test} />;
-                })}
               </div>
             </>
           )}

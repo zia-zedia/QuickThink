@@ -49,6 +49,23 @@ export const testRouter = createTRPCRouter({
         });
       }
 
+      const attempt = await ctx.db
+        .select({ id: results.id })
+        .from(results)
+        .where(
+          and(
+            eq(results.studentId, ctx.user?.id!),
+            eq(results.testId, input.test_id),
+          ),
+        );
+
+      if (attempt.length > 0) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You have attempted this test before",
+        });
+      }
+
       const sessionInfo =
         session.length > 0
           ? {

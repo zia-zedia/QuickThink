@@ -15,6 +15,7 @@ import {
   ZodQuestion,
   answers,
   courses,
+  organizations,
   questions,
   results,
   tests,
@@ -75,6 +76,10 @@ export const teacherRouter = createTRPCRouter({
           message: "You are not the creator of this test.",
         });
       }
+      const organization = await db
+        .select({ id: organizations.id })
+        .from(organizations)
+        .where(eq(organizations.creatorId, ctx.user?.id!));
 
       await db
         .update(tests)
@@ -82,6 +87,7 @@ export const teacherRouter = createTRPCRouter({
           title: input.test.title,
           description: input.test.description,
           timeLength: input.test.timeLength,
+          organizationId: organization[0]?.id,
           visibility: "public",
         })
         .where(eq(tests.id, input.test.id!));
@@ -249,12 +255,18 @@ export const teacherRouter = createTRPCRouter({
         });
       }
 
+      const organization = await db
+        .select({ id: organizations.id })
+        .from(organizations)
+        .where(eq(organizations.creatorId, ctx.user?.id!));
+
       await db
         .update(tests)
         .set({
           title: input.test.title,
           description: input.test.description,
           timeLength: input.test.timeLength,
+          organizationId: organization[0]?.id,
         })
         .where(eq(tests.id, input.test.id!));
 

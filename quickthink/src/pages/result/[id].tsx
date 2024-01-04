@@ -56,11 +56,8 @@ export default function ResultPage() {
                 </p>
               )}
             </div>
-            <div className="flex flex-row justify-end gap-3 rounded-b-lg bg-[#1A2643] px-3 py-1 text-white">
-              <Link
-                href={"/student"}
-                className="flex justify-end rounded-b-lg bg-[#1A2643] px-3 py-1 text-white"
-              >
+            <div className="flex flex-row items-center justify-end gap-3 rounded-b-lg bg-[#1A2643] px-3 py-1 text-white">
+              <Link href={"/student"} className="">
                 Go back to dashboard
               </Link>
               <Link href={`/result/detail/${resultId}`}>
