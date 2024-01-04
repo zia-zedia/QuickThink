@@ -27,9 +27,17 @@ export const studentRouter = createTRPCRouter({
     return await ctx.db
       .select()
       .from(users)
+      .leftJoin(user_org, eq(user_org.userId, users.id))
+      .leftJoin(organizations, eq(organizations.id, user_org.organizationId))
       .leftJoin(user_courses, eq(users.id, user_courses.userId))
       .leftJoin(courses, eq(user_courses.courseId, courses.id))
-      .leftJoin(tests, eq(tests.courseId, courses.id))
+      .leftJoin(
+        tests,
+        or(
+          eq(tests.courseId, courses.id),
+          eq(tests.organizationId, organizations.id),
+        ),
+      )
       .where(eq(users.id, ctx.user?.id!));
   }),
   getCourses: authenticatedProcedure.query(async ({ ctx }) => {
